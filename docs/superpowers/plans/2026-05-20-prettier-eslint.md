@@ -29,6 +29,7 @@ water-tracking/
 ### Task 1: Install dev dependencies and add scripts
 
 **Files:**
+
 - Modify: `package.json` (via `npm install --save-dev` + scripts edit)
 
 - [ ] **Step 1: Install the lint + format dev dependencies**
@@ -85,6 +86,7 @@ git commit -m "Install Prettier + ESLint dev dependencies and scripts"
 ### Task 2: Add Prettier configuration
 
 **Files:**
+
 - Create: `.prettierrc.json`
 - Create: `.prettierignore`
 
@@ -92,13 +94,13 @@ git commit -m "Install Prettier + ESLint dev dependencies and scripts"
 
 ```json
 {
-    "tabWidth": 2,
-    "useTabs": false,
-    "singleQuote": true,
-    "semi": true,
-    "trailingComma": "all",
-    "arrowParens": "avoid",
-    "printWidth": 100
+  "tabWidth": 2,
+  "useTabs": false,
+  "singleQuote": true,
+  "semi": true,
+  "trailingComma": "all",
+  "arrowParens": "avoid",
+  "printWidth": 100
 }
 ```
 
@@ -117,7 +119,7 @@ coverage
 npx prettier --check .
 ```
 
-Expected: a list of files that *would* be reformatted (the existing 4-space-indented code). Exit code 1 is fine — the sweep happens in Task 4.
+Expected: a list of files that _would_ be reformatted (the existing 4-space-indented code). Exit code 1 is fine — the sweep happens in Task 4.
 
 - [ ] **Step 4: Stage and commit**
 
@@ -131,6 +133,7 @@ git commit -m "Add Prettier configuration"
 ### Task 3: Add ESLint flat config
 
 **Files:**
+
 - Create: `eslint.config.js`
 
 - [ ] **Step 1: Create `eslint.config.js`**
@@ -144,30 +147,24 @@ import tseslint from 'typescript-eslint';
 import prettier from 'eslint-config-prettier';
 
 export default tseslint.config(
-    { ignores: ['dist', 'coverage'] },
-    {
-        extends: [
-            js.configs.recommended,
-            ...tseslint.configs.recommended,
-        ],
-        files: ['**/*.{ts,tsx}'],
-        languageOptions: {
-            ecmaVersion: 2022,
-            globals: globals.browser,
-        },
-        plugins: {
-            'react-hooks': reactHooks,
-            'react-refresh': reactRefresh,
-        },
-        rules: {
-            ...reactHooks.configs.recommended.rules,
-            'react-refresh/only-export-components': [
-                'warn',
-                { allowConstantExport: true },
-            ],
-        },
+  { ignores: ['dist', 'coverage'] },
+  {
+    extends: [js.configs.recommended, ...tseslint.configs.recommended],
+    files: ['**/*.{ts,tsx}'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      globals: globals.browser,
     },
-    prettier,
+    plugins: {
+      'react-hooks': reactHooks,
+      'react-refresh': reactRefresh,
+    },
+    rules: {
+      ...reactHooks.configs.recommended.rules,
+      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+    },
+  },
+  prettier,
 );
 ```
 
@@ -193,6 +190,7 @@ git commit -m "Add ESLint flat config"
 ### Task 4: One-time Prettier sweep
 
 **Files:**
+
 - Modify: every existing source file under `src/` plus `index.html` and the config files just added (`.prettierrc.json`, `eslint.config.js`, etc.)
 
 This task lands as a single big-diff commit. The commit message identifies it as a bulk formatting change so future `git blame` invocations can `--ignore-rev` it.
@@ -237,6 +235,7 @@ The commit message intentionally has no body — it's a known-bulk-whitespace co
 ### Task 5: ESLint pass and fix any genuine issues
 
 **Files:**
+
 - Modify: any files that ESLint flags (unknown until step 1)
 
 - [ ] **Step 1: Run ESLint across the project**
@@ -267,7 +266,7 @@ The store file exports the store hook plus several selector hooks. This is the u
 
 Re-run `npm run lint` to confirm the warning is gone.
 
-(If the warning doesn't actually fire — for example because the rule only triggers in files that *also* export a component — skip this step.)
+(If the warning doesn't actually fire — for example because the rule only triggers in files that _also_ export a component — skip this step.)
 
 - [ ] **Step 3: Confirm the full verification suite**
 
@@ -296,6 +295,7 @@ If no files were modified (lint was clean from the start), skip the commit — t
 ## Self-Review
 
 **Spec coverage:**
+
 - Install all required dev deps → Task 1
 - New `lint`, `format`, `format:check` scripts → Task 1
 - `.prettierrc.json` with the seven specified options → Task 2

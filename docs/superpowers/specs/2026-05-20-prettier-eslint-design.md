@@ -14,6 +14,7 @@ config matches what new contributors would expect.
 ## Scope
 
 **In scope**
+
 - Install `prettier`, `eslint`, `@eslint/js`, `globals`, `typescript-eslint`,
   `eslint-plugin-react-hooks`, `eslint-plugin-react-refresh`,
   `eslint-config-prettier`
@@ -25,6 +26,7 @@ config matches what new contributors would expect.
 - Fix any genuine issues `npm run lint` reports
 
 **Out of scope**
+
 - Pre-commit hooks (Husky, lint-staged) — not worth the setup until there
   are collaborators or CI; can be added later
 - CI integration — no CI exists yet
@@ -45,17 +47,18 @@ default in ESLint 9+ and the format `npm create vite@latest` generates today.
 
 ```json
 {
-    "tabWidth": 2,
-    "useTabs": false,
-    "singleQuote": true,
-    "semi": true,
-    "trailingComma": "all",
-    "arrowParens": "avoid",
-    "printWidth": 100
+  "tabWidth": 2,
+  "useTabs": false,
+  "singleQuote": true,
+  "semi": true,
+  "trailingComma": "all",
+  "arrowParens": "avoid",
+  "printWidth": 100
 }
 ```
 
 Rationale:
+
 - `tabWidth: 2`, `useTabs: false` — the explicit user requirement
 - `singleQuote: true` — matches existing code (`'react'` etc.)
 - `semi: true` — existing code uses semicolons
@@ -76,30 +79,24 @@ import tseslint from 'typescript-eslint';
 import prettier from 'eslint-config-prettier';
 
 export default tseslint.config(
-    { ignores: ['dist', 'coverage'] },
-    {
-        extends: [
-            js.configs.recommended,
-            ...tseslint.configs.recommended,
-        ],
-        files: ['**/*.{ts,tsx}'],
-        languageOptions: {
-            ecmaVersion: 2022,
-            globals: globals.browser,
-        },
-        plugins: {
-            'react-hooks': reactHooks,
-            'react-refresh': reactRefresh,
-        },
-        rules: {
-            ...reactHooks.configs.recommended.rules,
-            'react-refresh/only-export-components': [
-                'warn',
-                { allowConstantExport: true },
-            ],
-        },
+  { ignores: ['dist', 'coverage'] },
+  {
+    extends: [js.configs.recommended, ...tseslint.configs.recommended],
+    files: ['**/*.{ts,tsx}'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      globals: globals.browser,
     },
-    prettier,
+    plugins: {
+      'react-hooks': reactHooks,
+      'react-refresh': reactRefresh,
+    },
+    rules: {
+      ...reactHooks.configs.recommended.rules,
+      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+    },
+  },
+  prettier,
 );
 ```
 
@@ -125,11 +122,11 @@ Add three:
 
 ```json
 {
-    "scripts": {
-        "lint": "eslint .",
-        "format": "prettier --write .",
-        "format:check": "prettier --check ."
-    }
+  "scripts": {
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  }
 }
 ```
 
@@ -148,6 +145,7 @@ SHA if desired.
 
 After reformatting, `npm run lint` is run and any ESLint findings are
 addressed:
+
 - Pure formatting issues should be impossible (`eslint-config-prettier`
   silences them).
 - Hook dependency issues or unused vars are fixed in a follow-up commit.
@@ -158,6 +156,7 @@ The intent is that the post-sweep `lint` run is clean.
 ## Verification
 
 After all changes:
+
 - `npm run lint` exits 0
 - `npm run format:check` exits 0
 - `npm run build` succeeds

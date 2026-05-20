@@ -53,6 +53,7 @@ water-tracking/
 ### Task 1: Scaffold the Vite + React + TypeScript project
 
 **Files:**
+
 - Create: `package.json`
 - Create: `tsconfig.json`
 - Create: `tsconfig.node.json`
@@ -143,12 +144,12 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
-    plugins: [react()],
-    test: {
-        globals: true,
-        environment: 'jsdom',
-        setupFiles: ['./src/test/setup.ts'],
-    },
+  plugins: [react()],
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts'],
+  },
 });
 ```
 
@@ -197,7 +198,7 @@ dist-ssr
 
 ```tsx
 function App() {
-    return <h1>Water Tracking</h1>;
+  return <h1>Water Tracking</h1>;
 }
 
 export default App;
@@ -211,9 +212,9 @@ import { createRoot } from 'react-dom/client';
 import App from './App';
 
 createRoot(document.getElementById('root')!).render(
-    <StrictMode>
-        <App />
-    </StrictMode>
+  <StrictMode>
+    <App />
+  </StrictMode>,
 );
 ```
 
@@ -246,6 +247,7 @@ git commit -m "Scaffold Vite + React + TypeScript project"
 ### Task 2: Install Vitest, React Testing Library, and a smoke test
 
 **Files:**
+
 - Modify: `package.json`
 - Create: `src/test/setup.ts`
 - Create: `src/App.test.tsx` (temporary smoke test; deleted at end of task)
@@ -264,7 +266,7 @@ import { afterEach } from 'vitest';
 import { cleanup } from '@testing-library/react';
 
 afterEach(() => {
-    cleanup();
+  cleanup();
 });
 ```
 
@@ -275,8 +277,8 @@ import { render, screen } from '@testing-library/react';
 import App from './App';
 
 test('renders the app title', () => {
-    render(<App />);
-    expect(screen.getByText('Water Tracking')).toBeInTheDocument();
+  render(<App />);
+  expect(screen.getByText('Water Tracking')).toBeInTheDocument();
 });
 ```
 
@@ -306,6 +308,7 @@ git commit -m "Add Vitest and React Testing Library"
 ### Task 3: Install MUI and configure system-aware theming
 
 **Files:**
+
 - Modify: `package.json` (via npm install)
 - Create: `src/theme.ts`
 - Modify: `src/main.tsx`
@@ -324,10 +327,10 @@ npm install @mui/material @mui/icons-material @emotion/react @emotion/styled @mu
 import { extendTheme } from '@mui/material/styles';
 
 export const theme = extendTheme({
-    colorSchemes: {
-        light: true,
-        dark: true,
-    },
+  colorSchemes: {
+    light: true,
+    dark: true,
+  },
 });
 ```
 
@@ -337,8 +340,8 @@ export const theme = extendTheme({
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
-    Experimental_CssVarsProvider as CssVarsProvider,
-    getInitColorSchemeScript,
+  Experimental_CssVarsProvider as CssVarsProvider,
+  getInitColorSchemeScript,
 } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -350,20 +353,20 @@ import { theme } from './theme';
 // avoid the "wrong theme on first paint" flash.
 const initScript = getInitColorSchemeScript({ defaultMode: 'system' });
 if (initScript) {
-    const script = document.createElement('script');
-    script.textContent = String(initScript.props.children);
-    document.head.insertBefore(script, document.head.firstChild);
+  const script = document.createElement('script');
+  script.textContent = String(initScript.props.children);
+  document.head.insertBefore(script, document.head.firstChild);
 }
 
 createRoot(document.getElementById('root')!).render(
-    <StrictMode>
-        <CssVarsProvider theme={theme} defaultMode="system">
-            <CssBaseline />
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
-                <App />
-            </LocalizationProvider>
-        </CssVarsProvider>
-    </StrictMode>
+  <StrictMode>
+    <CssVarsProvider theme={theme} defaultMode="system">
+      <CssBaseline />
+      <LocalizationProvider dateAdapter={AdapterDateFns}>
+        <App />
+      </LocalizationProvider>
+    </CssVarsProvider>
+  </StrictMode>,
 );
 ```
 
@@ -375,18 +378,16 @@ import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 
 function App() {
-    return (
-        <Container maxWidth="md">
-            <Box sx={{ py: 4 }}>
-                <Typography variant="h3" component="h1" gutterBottom>
-                    Water Tracking
-                </Typography>
-                <Typography color="text.secondary">
-                    No meters yet.
-                </Typography>
-            </Box>
-        </Container>
-    );
+  return (
+    <Container maxWidth="md">
+      <Box sx={{ py: 4 }}>
+        <Typography variant="h3" component="h1" gutterBottom>
+          Water Tracking
+        </Typography>
+        <Typography color="text.secondary">No meters yet.</Typography>
+      </Box>
+    </Container>
+  );
 }
 
 export default App;
@@ -399,6 +400,7 @@ npm run dev
 ```
 
 Open `http://localhost:5173`. Confirm:
+
 - Title renders in the MUI typography style
 - Background colour follows OS preference (toggle OS dark mode if possible to verify)
 
@@ -424,29 +426,30 @@ git commit -m "Add MUI and system-aware theming via CssVarsProvider"
 ### Task 4: Define core types
 
 **Files:**
+
 - Create: `src/types.ts`
 
 - [ ] **Step 1: Create `src/types.ts`**
 
 ```ts
 export interface Meter {
-    id: string;
-    name: string;
-    createdAt: string; // ISO 8601
+  id: string;
+  name: string;
+  createdAt: string; // ISO 8601
 }
 
 export interface Reading {
-    id: string;
-    meterId: string;
-    reading: number; // decimal m³, e.g. 1234.5678
-    takenAt: string; // ISO 8601
-    createdAt: string; // ISO 8601
+  id: string;
+  meterId: string;
+  reading: number; // decimal m³, e.g. 1234.5678
+  takenAt: string; // ISO 8601
+  createdAt: string; // ISO 8601
 }
 
 export interface NewReadingInput {
-    meterId: string;
-    reading: number;
-    takenAt: string;
+  meterId: string;
+  reading: number;
+  takenAt: string;
 }
 ```
 
@@ -470,6 +473,7 @@ git commit -m "Add core domain types"
 ### Task 5: Formatting helpers (TDD)
 
 **Files:**
+
 - Create: `src/lib/formatting.test.ts`
 - Create: `src/lib/formatting.ts`
 
@@ -483,50 +487,50 @@ Create `src/lib/formatting.test.ts`:
 import { splitDigits, formatReading, formatDelta } from './formatting';
 
 describe('splitDigits', () => {
-    test('splits a whole-and-fraction reading into 4+4 digit strings', () => {
-        expect(splitDigits(1234.5678)).toEqual({ white: '1234', red: '5678' });
-    });
+  test('splits a whole-and-fraction reading into 4+4 digit strings', () => {
+    expect(splitDigits(1234.5678)).toEqual({ white: '1234', red: '5678' });
+  });
 
-    test('zero-pads small whites', () => {
-        expect(splitDigits(7.0001)).toEqual({ white: '0007', red: '0001' });
-    });
+  test('zero-pads small whites', () => {
+    expect(splitDigits(7.0001)).toEqual({ white: '0007', red: '0001' });
+  });
 
-    test('zero-pads small reds', () => {
-        expect(splitDigits(1234.0001)).toEqual({ white: '1234', red: '0001' });
-    });
+  test('zero-pads small reds', () => {
+    expect(splitDigits(1234.0001)).toEqual({ white: '1234', red: '0001' });
+  });
 
-    test('handles a clean integer reading', () => {
-        expect(splitDigits(42)).toEqual({ white: '0042', red: '0000' });
-    });
+  test('handles a clean integer reading', () => {
+    expect(splitDigits(42)).toEqual({ white: '0042', red: '0000' });
+  });
 
-    test('rounds the fractional portion to 4 digits', () => {
-        // 0.12345 has 5 decimal digits — should round to 1235
-        expect(splitDigits(1.12345)).toEqual({ white: '0001', red: '1235' });
-    });
+  test('rounds the fractional portion to 4 digits', () => {
+    // 0.12345 has 5 decimal digits — should round to 1235
+    expect(splitDigits(1.12345)).toEqual({ white: '0001', red: '1235' });
+  });
 });
 
 describe('formatReading', () => {
-    test('formats with 4 decimal places and m³ suffix', () => {
-        expect(formatReading(1234.5678)).toBe('1234.5678 m³');
-    });
+  test('formats with 4 decimal places and m³ suffix', () => {
+    expect(formatReading(1234.5678)).toBe('1234.5678 m³');
+  });
 
-    test('pads short readings', () => {
-        expect(formatReading(7)).toBe('0007.0000 m³');
-    });
+  test('pads short readings', () => {
+    expect(formatReading(7)).toBe('0007.0000 m³');
+  });
 });
 
 describe('formatDelta', () => {
-    test('formats a positive delta in m³ and L', () => {
-        expect(formatDelta(0.0123)).toBe('+0.0123 m³ / +12.3 L');
-    });
+  test('formats a positive delta in m³ and L', () => {
+    expect(formatDelta(0.0123)).toBe('+0.0123 m³ / +12.3 L');
+  });
 
-    test('formats a negative delta', () => {
-        expect(formatDelta(-0.005)).toBe('-0.0050 m³ / -5.0 L');
-    });
+  test('formats a negative delta', () => {
+    expect(formatDelta(-0.005)).toBe('-0.0050 m³ / -5.0 L');
+  });
 
-    test('formats a zero delta', () => {
-        expect(formatDelta(0)).toBe('+0.0000 m³ / +0.0 L');
-    });
+  test('formats a zero delta', () => {
+    expect(formatDelta(0)).toBe('+0.0000 m³ / +0.0 L');
+  });
 });
 ```
 
@@ -542,32 +546,32 @@ Expected: failures with "Cannot find module './formatting'".
 
 ```ts
 export interface DigitParts {
-    white: string;
-    red: string;
+  white: string;
+  red: string;
 }
 
 export function splitDigits(reading: number): DigitParts {
-    // Use the rounded total to avoid floating-point splits going off-by-one
-    // (e.g. 1.12345 → red 1235, not 1234).
-    const totalTenThousandths = Math.round(reading * 10000);
-    const whole = Math.floor(totalTenThousandths / 10000);
-    const fraction = totalTenThousandths - whole * 10000;
-    return {
-        white: String(whole).padStart(4, '0'),
-        red: String(fraction).padStart(4, '0'),
-    };
+  // Use the rounded total to avoid floating-point splits going off-by-one
+  // (e.g. 1.12345 → red 1235, not 1234).
+  const totalTenThousandths = Math.round(reading * 10000);
+  const whole = Math.floor(totalTenThousandths / 10000);
+  const fraction = totalTenThousandths - whole * 10000;
+  return {
+    white: String(whole).padStart(4, '0'),
+    red: String(fraction).padStart(4, '0'),
+  };
 }
 
 export function formatReading(reading: number): string {
-    const { white, red } = splitDigits(reading);
-    return `${white}.${red} m³`;
+  const { white, red } = splitDigits(reading);
+  return `${white}.${red} m³`;
 }
 
 export function formatDelta(deltaM3: number): string {
-    const sign = deltaM3 >= 0 ? '+' : '-';
-    const absM3 = Math.abs(deltaM3);
-    const absL = absM3 * 1000;
-    return `${sign}${absM3.toFixed(4)} m³ / ${sign}${absL.toFixed(1)} L`;
+  const sign = deltaM3 >= 0 ? '+' : '-';
+  const absM3 = Math.abs(deltaM3);
+  const absL = absM3 * 1000;
+  return `${sign}${absM3.toFixed(4)} m³ / ${sign}${absL.toFixed(1)} L`;
 }
 ```
 
@@ -591,6 +595,7 @@ git commit -m "Add formatting helpers for reading display and deltas"
 ### Task 6: Zustand store — state + meter actions (TDD)
 
 **Files:**
+
 - Modify: `package.json` (via npm install)
 - Create: `src/store/useWaterTrackingStore.test.ts`
 - Create: `src/store/useWaterTrackingStore.ts`
@@ -608,84 +613,84 @@ Create `src/store/useWaterTrackingStore.test.ts`:
 ```ts
 import { beforeEach } from 'vitest';
 import {
-    useWaterTrackingStore,
-    useWaterTrackingMeters,
-    useWaterTrackingSelectedMeterId,
+  useWaterTrackingStore,
+  useWaterTrackingMeters,
+  useWaterTrackingSelectedMeterId,
 } from './useWaterTrackingStore';
 import { renderHook, act } from '@testing-library/react';
 
 beforeEach(() => {
-    // Reset persisted state between tests.
-    localStorage.clear();
-    useWaterTrackingStore.setState({
-        meters: [],
-        readings: [],
-        selectedMeterId: null,
-    });
+  // Reset persisted state between tests.
+  localStorage.clear();
+  useWaterTrackingStore.setState({
+    meters: [],
+    readings: [],
+    selectedMeterId: null,
+  });
 });
 
 describe('meter actions', () => {
-    test('addMeter creates a meter with the given name and returns its id', () => {
-        const id = useWaterTrackingStore.getState().actions.addMeter('Main');
-        const meters = useWaterTrackingStore.getState().meters;
-        expect(meters).toHaveLength(1);
-        expect(meters[0]).toMatchObject({ id, name: 'Main' });
-        expect(meters[0].createdAt).toMatch(/\d{4}-\d{2}-\d{2}T/);
-    });
+  test('addMeter creates a meter with the given name and returns its id', () => {
+    const id = useWaterTrackingStore.getState().actions.addMeter('Main');
+    const meters = useWaterTrackingStore.getState().meters;
+    expect(meters).toHaveLength(1);
+    expect(meters[0]).toMatchObject({ id, name: 'Main' });
+    expect(meters[0].createdAt).toMatch(/\d{4}-\d{2}-\d{2}T/);
+  });
 
-    test('addMeter on an empty store selects the new meter', () => {
-        const id = useWaterTrackingStore.getState().actions.addMeter('Main');
-        expect(useWaterTrackingStore.getState().selectedMeterId).toBe(id);
-    });
+  test('addMeter on an empty store selects the new meter', () => {
+    const id = useWaterTrackingStore.getState().actions.addMeter('Main');
+    expect(useWaterTrackingStore.getState().selectedMeterId).toBe(id);
+  });
 
-    test('addMeter does not change the selection when a meter is already selected', () => {
-        const first = useWaterTrackingStore.getState().actions.addMeter('Main');
-        useWaterTrackingStore.getState().actions.addMeter('Irrigation');
-        expect(useWaterTrackingStore.getState().selectedMeterId).toBe(first);
-    });
+  test('addMeter does not change the selection when a meter is already selected', () => {
+    const first = useWaterTrackingStore.getState().actions.addMeter('Main');
+    useWaterTrackingStore.getState().actions.addMeter('Irrigation');
+    expect(useWaterTrackingStore.getState().selectedMeterId).toBe(first);
+  });
 
-    test('renameMeter updates the name', () => {
-        const id = useWaterTrackingStore.getState().actions.addMeter('Main');
-        useWaterTrackingStore.getState().actions.renameMeter(id, 'House');
-        expect(useWaterTrackingStore.getState().meters[0].name).toBe('House');
-    });
+  test('renameMeter updates the name', () => {
+    const id = useWaterTrackingStore.getState().actions.addMeter('Main');
+    useWaterTrackingStore.getState().actions.renameMeter(id, 'House');
+    expect(useWaterTrackingStore.getState().meters[0].name).toBe('House');
+  });
 
-    test('deleteMeter removes the meter', () => {
-        const id = useWaterTrackingStore.getState().actions.addMeter('Main');
-        useWaterTrackingStore.getState().actions.deleteMeter(id);
-        expect(useWaterTrackingStore.getState().meters).toHaveLength(0);
-    });
+  test('deleteMeter removes the meter', () => {
+    const id = useWaterTrackingStore.getState().actions.addMeter('Main');
+    useWaterTrackingStore.getState().actions.deleteMeter(id);
+    expect(useWaterTrackingStore.getState().meters).toHaveLength(0);
+  });
 
-    test('deleteMeter falls back to the next remaining meter when the deleted one was selected', () => {
-        const a = useWaterTrackingStore.getState().actions.addMeter('Main');
-        const b = useWaterTrackingStore.getState().actions.addMeter('Irrigation');
-        useWaterTrackingStore.getState().actions.selectMeter(a);
-        useWaterTrackingStore.getState().actions.deleteMeter(a);
-        expect(useWaterTrackingStore.getState().selectedMeterId).toBe(b);
-    });
+  test('deleteMeter falls back to the next remaining meter when the deleted one was selected', () => {
+    const a = useWaterTrackingStore.getState().actions.addMeter('Main');
+    const b = useWaterTrackingStore.getState().actions.addMeter('Irrigation');
+    useWaterTrackingStore.getState().actions.selectMeter(a);
+    useWaterTrackingStore.getState().actions.deleteMeter(a);
+    expect(useWaterTrackingStore.getState().selectedMeterId).toBe(b);
+  });
 
-    test('deleteMeter sets selectedMeterId to null when no meters remain', () => {
-        const id = useWaterTrackingStore.getState().actions.addMeter('Main');
-        useWaterTrackingStore.getState().actions.deleteMeter(id);
-        expect(useWaterTrackingStore.getState().selectedMeterId).toBeNull();
-    });
+  test('deleteMeter sets selectedMeterId to null when no meters remain', () => {
+    const id = useWaterTrackingStore.getState().actions.addMeter('Main');
+    useWaterTrackingStore.getState().actions.deleteMeter(id);
+    expect(useWaterTrackingStore.getState().selectedMeterId).toBeNull();
+  });
 
-    test('selector hook reflects the latest state', () => {
-        const { result } = renderHook(() => useWaterTrackingMeters());
-        act(() => {
-            useWaterTrackingStore.getState().actions.addMeter('Main');
-        });
-        expect(result.current).toHaveLength(1);
+  test('selector hook reflects the latest state', () => {
+    const { result } = renderHook(() => useWaterTrackingMeters());
+    act(() => {
+      useWaterTrackingStore.getState().actions.addMeter('Main');
     });
+    expect(result.current).toHaveLength(1);
+  });
 
-    test('useWaterTrackingSelectedMeterId returns the current selection', () => {
-        const { result } = renderHook(() => useWaterTrackingSelectedMeterId());
-        let id = '';
-        act(() => {
-            id = useWaterTrackingStore.getState().actions.addMeter('Main');
-        });
-        expect(result.current).toBe(id);
+  test('useWaterTrackingSelectedMeterId returns the current selection', () => {
+    const { result } = renderHook(() => useWaterTrackingSelectedMeterId());
+    let id = '';
+    act(() => {
+      id = useWaterTrackingStore.getState().actions.addMeter('Main');
     });
+    expect(result.current).toBe(id);
+  });
 });
 ```
 
@@ -706,108 +711,105 @@ import { immer } from 'zustand/middleware/immer';
 import type { Meter, Reading, NewReadingInput } from '../types';
 
 export interface WaterTrackingState {
-    meters: Meter[];
-    readings: Reading[];
-    selectedMeterId: string | null;
+  meters: Meter[];
+  readings: Reading[];
+  selectedMeterId: string | null;
 }
 
 interface WaterTrackingActions {
-    actions: {
-        addMeter: (name: string) => string;
-        renameMeter: (id: string, name: string) => void;
-        deleteMeter: (id: string) => void;
-        selectMeter: (id: string | null) => void;
+  actions: {
+    addMeter: (name: string) => string;
+    renameMeter: (id: string, name: string) => void;
+    deleteMeter: (id: string) => void;
+    selectMeter: (id: string | null) => void;
 
-        addReading: (input: NewReadingInput) => void;
-        updateReading: (id: string, patch: Partial<NewReadingInput>) => void;
-        deleteReading: (id: string) => void;
-    };
+    addReading: (input: NewReadingInput) => void;
+    updateReading: (id: string, patch: Partial<NewReadingInput>) => void;
+    deleteReading: (id: string) => void;
+  };
 }
 
 const name = 'water-tracking-store';
 
 const initialState: WaterTrackingState = {
-    meters: [],
-    readings: [],
-    selectedMeterId: null,
+  meters: [],
+  readings: [],
+  selectedMeterId: null,
 };
 
 export const useWaterTrackingStore = create<WaterTrackingState & WaterTrackingActions>()(
-    devtools(
-        persist(
-            immer(set => ({
-                ...initialState,
-                actions: {
-                    addMeter: (meterName: string) => {
-                        const id = crypto.randomUUID();
-                        const createdAt = new Date().toISOString();
-                        set(state => {
-                            state.meters.push({ id, name: meterName, createdAt });
-                            if (state.selectedMeterId === null) {
-                                state.selectedMeterId = id;
-                            }
-                        });
-                        return id;
-                    },
+  devtools(
+    persist(
+      immer(set => ({
+        ...initialState,
+        actions: {
+          addMeter: (meterName: string) => {
+            const id = crypto.randomUUID();
+            const createdAt = new Date().toISOString();
+            set(state => {
+              state.meters.push({ id, name: meterName, createdAt });
+              if (state.selectedMeterId === null) {
+                state.selectedMeterId = id;
+              }
+            });
+            return id;
+          },
 
-                    renameMeter: (id, meterName) => {
-                        set(state => {
-                            const meter = state.meters.find(m => m.id === id);
-                            if (meter) meter.name = meterName;
-                        });
-                    },
+          renameMeter: (id, meterName) => {
+            set(state => {
+              const meter = state.meters.find(m => m.id === id);
+              if (meter) meter.name = meterName;
+            });
+          },
 
-                    deleteMeter: (id) => {
-                        set(state => {
-                            state.meters = state.meters.filter(m => m.id !== id);
-                            state.readings = state.readings.filter(r => r.meterId !== id);
-                            if (state.selectedMeterId === id) {
-                                state.selectedMeterId = state.meters[0]?.id ?? null;
-                            }
-                        });
-                    },
+          deleteMeter: id => {
+            set(state => {
+              state.meters = state.meters.filter(m => m.id !== id);
+              state.readings = state.readings.filter(r => r.meterId !== id);
+              if (state.selectedMeterId === id) {
+                state.selectedMeterId = state.meters[0]?.id ?? null;
+              }
+            });
+          },
 
-                    selectMeter: (id) => {
-                        set(state => {
-                            state.selectedMeterId = id;
-                        });
-                    },
+          selectMeter: id => {
+            set(state => {
+              state.selectedMeterId = id;
+            });
+          },
 
-                    addReading: () => {
-                        // Implemented in Task 7
-                    },
+          addReading: () => {
+            // Implemented in Task 7
+          },
 
-                    updateReading: () => {
-                        // Implemented in Task 7
-                    },
+          updateReading: () => {
+            // Implemented in Task 7
+          },
 
-                    deleteReading: () => {
-                        // Implemented in Task 7
-                    },
-                },
-            })),
-            {
-                name,
-                version: 0,
-                partialize: state => ({
-                    meters: state.meters,
-                    readings: state.readings,
-                    selectedMeterId: state.selectedMeterId,
-                }),
-            }
-        ),
-        { name }
-    )
+          deleteReading: () => {
+            // Implemented in Task 7
+          },
+        },
+      })),
+      {
+        name,
+        version: 0,
+        partialize: state => ({
+          meters: state.meters,
+          readings: state.readings,
+          selectedMeterId: state.selectedMeterId,
+        }),
+      },
+    ),
+    { name },
+  ),
 );
 
-export const useWaterTrackingMeters = () =>
-    useWaterTrackingStore(state => state.meters);
-export const useWaterTrackingReadings = () =>
-    useWaterTrackingStore(state => state.readings);
+export const useWaterTrackingMeters = () => useWaterTrackingStore(state => state.meters);
+export const useWaterTrackingReadings = () => useWaterTrackingStore(state => state.readings);
 export const useWaterTrackingSelectedMeterId = () =>
-    useWaterTrackingStore(state => state.selectedMeterId);
-export const useWaterTrackingActions = () =>
-    useWaterTrackingStore(state => state.actions);
+  useWaterTrackingStore(state => state.selectedMeterId);
+export const useWaterTrackingActions = () => useWaterTrackingStore(state => state.actions);
 ```
 
 - [ ] **Step 5: Run the tests to verify they pass**
@@ -830,6 +832,7 @@ git commit -m "Add Zustand store with meter actions"
 ### Task 7: Add reading actions to the store (TDD)
 
 **Files:**
+
 - Modify: `src/store/useWaterTrackingStore.test.ts`
 - Modify: `src/store/useWaterTrackingStore.ts`
 
@@ -839,76 +842,74 @@ Add after the existing `describe('meter actions', ...)` block:
 
 ```ts
 describe('reading actions', () => {
-    function seedMeter(): string {
-        return useWaterTrackingStore.getState().actions.addMeter('Main');
-    }
+  function seedMeter(): string {
+    return useWaterTrackingStore.getState().actions.addMeter('Main');
+  }
 
-    test('addReading appends a reading with an id and createdAt', () => {
-        const meterId = seedMeter();
-        useWaterTrackingStore.getState().actions.addReading({
-            meterId,
-            reading: 1234.5678,
-            takenAt: '2026-05-20T08:00:00.000Z',
-        });
-        const readings = useWaterTrackingStore.getState().readings;
-        expect(readings).toHaveLength(1);
-        expect(readings[0]).toMatchObject({
-            meterId,
-            reading: 1234.5678,
-            takenAt: '2026-05-20T08:00:00.000Z',
-        });
-        expect(readings[0].id).toBeTruthy();
-        expect(readings[0].createdAt).toMatch(/\d{4}-\d{2}-\d{2}T/);
+  test('addReading appends a reading with an id and createdAt', () => {
+    const meterId = seedMeter();
+    useWaterTrackingStore.getState().actions.addReading({
+      meterId,
+      reading: 1234.5678,
+      takenAt: '2026-05-20T08:00:00.000Z',
     });
+    const readings = useWaterTrackingStore.getState().readings;
+    expect(readings).toHaveLength(1);
+    expect(readings[0]).toMatchObject({
+      meterId,
+      reading: 1234.5678,
+      takenAt: '2026-05-20T08:00:00.000Z',
+    });
+    expect(readings[0].id).toBeTruthy();
+    expect(readings[0].createdAt).toMatch(/\d{4}-\d{2}-\d{2}T/);
+  });
 
-    test('updateReading patches the given fields and leaves others alone', () => {
-        const meterId = seedMeter();
-        useWaterTrackingStore.getState().actions.addReading({
-            meterId,
-            reading: 1234.5678,
-            takenAt: '2026-05-20T08:00:00.000Z',
-        });
-        const readingId = useWaterTrackingStore.getState().readings[0].id;
-        useWaterTrackingStore.getState().actions.updateReading(readingId, {
-            reading: 1235.0001,
-        });
-        const updated = useWaterTrackingStore.getState().readings[0];
-        expect(updated.reading).toBe(1235.0001);
-        expect(updated.takenAt).toBe('2026-05-20T08:00:00.000Z');
+  test('updateReading patches the given fields and leaves others alone', () => {
+    const meterId = seedMeter();
+    useWaterTrackingStore.getState().actions.addReading({
+      meterId,
+      reading: 1234.5678,
+      takenAt: '2026-05-20T08:00:00.000Z',
     });
+    const readingId = useWaterTrackingStore.getState().readings[0].id;
+    useWaterTrackingStore.getState().actions.updateReading(readingId, {
+      reading: 1235.0001,
+    });
+    const updated = useWaterTrackingStore.getState().readings[0];
+    expect(updated.reading).toBe(1235.0001);
+    expect(updated.takenAt).toBe('2026-05-20T08:00:00.000Z');
+  });
 
-    test('deleteReading removes the given reading', () => {
-        const meterId = seedMeter();
-        useWaterTrackingStore.getState().actions.addReading({
-            meterId,
-            reading: 1.0,
-            takenAt: '2026-05-20T08:00:00.000Z',
-        });
-        const readingId = useWaterTrackingStore.getState().readings[0].id;
-        useWaterTrackingStore.getState().actions.deleteReading(readingId);
-        expect(useWaterTrackingStore.getState().readings).toHaveLength(0);
+  test('deleteReading removes the given reading', () => {
+    const meterId = seedMeter();
+    useWaterTrackingStore.getState().actions.addReading({
+      meterId,
+      reading: 1.0,
+      takenAt: '2026-05-20T08:00:00.000Z',
     });
+    const readingId = useWaterTrackingStore.getState().readings[0].id;
+    useWaterTrackingStore.getState().actions.deleteReading(readingId);
+    expect(useWaterTrackingStore.getState().readings).toHaveLength(0);
+  });
 
-    test('deleteMeter cascades and removes the meter\'s readings', () => {
-        const meterId = seedMeter();
-        const otherId = useWaterTrackingStore
-            .getState()
-            .actions.addMeter('Irrigation');
-        useWaterTrackingStore.getState().actions.addReading({
-            meterId,
-            reading: 1.0,
-            takenAt: '2026-05-20T08:00:00.000Z',
-        });
-        useWaterTrackingStore.getState().actions.addReading({
-            meterId: otherId,
-            reading: 2.0,
-            takenAt: '2026-05-20T08:00:00.000Z',
-        });
-        useWaterTrackingStore.getState().actions.deleteMeter(meterId);
-        const remaining = useWaterTrackingStore.getState().readings;
-        expect(remaining).toHaveLength(1);
-        expect(remaining[0].meterId).toBe(otherId);
+  test("deleteMeter cascades and removes the meter's readings", () => {
+    const meterId = seedMeter();
+    const otherId = useWaterTrackingStore.getState().actions.addMeter('Irrigation');
+    useWaterTrackingStore.getState().actions.addReading({
+      meterId,
+      reading: 1.0,
+      takenAt: '2026-05-20T08:00:00.000Z',
     });
+    useWaterTrackingStore.getState().actions.addReading({
+      meterId: otherId,
+      reading: 2.0,
+      takenAt: '2026-05-20T08:00:00.000Z',
+    });
+    useWaterTrackingStore.getState().actions.deleteMeter(meterId);
+    const remaining = useWaterTrackingStore.getState().readings;
+    expect(remaining).toHaveLength(1);
+    expect(remaining[0].meterId).toBe(otherId);
+  });
 });
 ```
 
@@ -969,6 +970,7 @@ git commit -m "Add reading actions to Zustand store"
 ### Task 8: `MeterDigitInput` component (TDD)
 
 **Files:**
+
 - Create: `src/components/MeterDigitInput.test.tsx`
 - Create: `src/components/MeterDigitInput.tsx`
 
@@ -987,74 +989,68 @@ import { vi } from 'vitest';
 import { MeterDigitInput } from './MeterDigitInput';
 
 function renderComponent(props: Partial<React.ComponentProps<typeof MeterDigitInput>> = {}) {
-    const handleChange = vi.fn();
-    render(
-        <MeterDigitInput
-            value={{ white: '', red: '' }}
-            onChange={handleChange}
-            {...props}
-        />
-    );
-    return { handleChange };
+  const handleChange = vi.fn();
+  render(<MeterDigitInput value={{ white: '', red: '' }} onChange={handleChange} {...props} />);
+  return { handleChange };
 }
 
 test('renders 8 digit boxes', () => {
-    renderComponent();
-    expect(screen.getAllByRole('textbox')).toHaveLength(8);
+  renderComponent();
+  expect(screen.getAllByRole('textbox')).toHaveLength(8);
 });
 
 test('typing into the first box fills it and advances focus', async () => {
-    const user = userEvent.setup();
-    const { handleChange } = renderComponent();
-    const inputs = screen.getAllByRole('textbox');
-    await user.click(inputs[0]);
-    await user.keyboard('5');
-    expect(handleChange).toHaveBeenLastCalledWith({ white: '5', red: '' });
+  const user = userEvent.setup();
+  const { handleChange } = renderComponent();
+  const inputs = screen.getAllByRole('textbox');
+  await user.click(inputs[0]);
+  await user.keyboard('5');
+  expect(handleChange).toHaveBeenLastCalledWith({ white: '5', red: '' });
 });
 
 test('typing 8 digits in sequence builds up the full value', async () => {
-    const user = userEvent.setup();
-    const { handleChange } = renderComponent();
-    const inputs = screen.getAllByRole('textbox');
-    await user.click(inputs[0]);
-    await user.keyboard('12345678');
-    expect(handleChange).toHaveBeenLastCalledWith({ white: '1234', red: '5678' });
+  const user = userEvent.setup();
+  const { handleChange } = renderComponent();
+  const inputs = screen.getAllByRole('textbox');
+  await user.click(inputs[0]);
+  await user.keyboard('12345678');
+  expect(handleChange).toHaveBeenLastCalledWith({ white: '1234', red: '5678' });
 });
 
 test('non-digit characters are ignored', async () => {
-    const user = userEvent.setup();
-    const { handleChange } = renderComponent();
-    const inputs = screen.getAllByRole('textbox');
-    await user.click(inputs[0]);
-    await user.keyboard('a');
-    expect(handleChange).not.toHaveBeenCalled();
+  const user = userEvent.setup();
+  const { handleChange } = renderComponent();
+  const inputs = screen.getAllByRole('textbox');
+  await user.click(inputs[0]);
+  await user.keyboard('a');
+  expect(handleChange).not.toHaveBeenCalled();
 });
 
 test('pasting 8 digits fills every box', async () => {
-    const user = userEvent.setup();
-    const { handleChange } = renderComponent();
-    const inputs = screen.getAllByRole('textbox');
-    await user.click(inputs[0]);
-    await user.paste('12345678');
-    expect(handleChange).toHaveBeenLastCalledWith({ white: '1234', red: '5678' });
+  const user = userEvent.setup();
+  const { handleChange } = renderComponent();
+  const inputs = screen.getAllByRole('textbox');
+  await user.click(inputs[0]);
+  await user.paste('12345678');
+  expect(handleChange).toHaveBeenLastCalledWith({ white: '1234', red: '5678' });
 });
 
 test('pasting a non-digit-containing string strips the non-digits', async () => {
-    const user = userEvent.setup();
-    const { handleChange } = renderComponent();
-    const inputs = screen.getAllByRole('textbox');
-    await user.click(inputs[0]);
-    await user.paste('12 34.56 78');
-    expect(handleChange).toHaveBeenLastCalledWith({ white: '1234', red: '5678' });
+  const user = userEvent.setup();
+  const { handleChange } = renderComponent();
+  const inputs = screen.getAllByRole('textbox');
+  await user.click(inputs[0]);
+  await user.paste('12 34.56 78');
+  expect(handleChange).toHaveBeenLastCalledWith({ white: '1234', red: '5678' });
 });
 
 test('Backspace on an empty box moves focus to the previous box', async () => {
-    const user = userEvent.setup();
-    renderComponent({ value: { white: '12', red: '' } });
-    const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
-    inputs[2].focus();
-    await user.keyboard('{Backspace}');
-    expect(document.activeElement).toBe(inputs[1]);
+  const user = userEvent.setup();
+  renderComponent({ value: { white: '12', red: '' } });
+  const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
+  inputs[2].focus();
+  await user.keyboard('{Backspace}');
+  expect(document.activeElement).toBe(inputs[1]);
 });
 ```
 
@@ -1075,128 +1071,127 @@ import InputBase from '@mui/material/InputBase';
 import { styled } from '@mui/material/styles';
 
 export interface DigitValue {
-    white: string;
-    red: string;
+  white: string;
+  red: string;
 }
 
 interface MeterDigitInputProps {
-    value: DigitValue;
-    onChange: (next: DigitValue) => void;
+  value: DigitValue;
+  onChange: (next: DigitValue) => void;
 }
 
 const DigitBox = styled(InputBase, {
-    shouldForwardProp: prop => prop !== 'tone',
+  shouldForwardProp: prop => prop !== 'tone',
 })<{ tone: 'white' | 'red' }>(({ theme, tone }) => ({
-    width: 32,
-    height: 44,
-    border: `1px solid ${theme.palette.divider}`,
-    borderRadius: 4,
-    backgroundColor:
-        tone === 'white' ? theme.palette.background.paper : theme.palette.error.main,
-    color: tone === 'white' ? theme.palette.text.primary : theme.palette.common.white,
-    '& input': {
-        textAlign: 'center',
-        fontFamily: 'monospace',
-        fontSize: '1.25rem',
-        padding: 0,
-    },
+  width: 32,
+  height: 44,
+  border: `1px solid ${theme.palette.divider}`,
+  borderRadius: 4,
+  backgroundColor: tone === 'white' ? theme.palette.background.paper : theme.palette.error.main,
+  color: tone === 'white' ? theme.palette.text.primary : theme.palette.common.white,
+  '& input': {
+    textAlign: 'center',
+    fontFamily: 'monospace',
+    fontSize: '1.25rem',
+    padding: 0,
+  },
 }));
 
 const TOTAL_DIGITS = 8;
 const WHITE_DIGITS = 4;
 
 function joinDigits(value: DigitValue): string {
-    return (value.white + value.red).padEnd(TOTAL_DIGITS, ' ').slice(0, TOTAL_DIGITS);
+  return (value.white + value.red).padEnd(TOTAL_DIGITS, ' ').slice(0, TOTAL_DIGITS);
 }
 
 function splitDigits(joined: string): DigitValue {
-    const trimmed = joined.replace(/\s+$/, '');
-    return {
-        white: trimmed.slice(0, WHITE_DIGITS),
-        red: trimmed.slice(WHITE_DIGITS, TOTAL_DIGITS),
-    };
+  const trimmed = joined.replace(/\s+$/, '');
+  return {
+    white: trimmed.slice(0, WHITE_DIGITS),
+    red: trimmed.slice(WHITE_DIGITS, TOTAL_DIGITS),
+  };
 }
 
 export function MeterDigitInput({ value, onChange }: MeterDigitInputProps) {
-    const inputs = useRef<Array<HTMLInputElement | null>>([]);
+  const inputs = useRef<Array<HTMLInputElement | null>>([]);
 
-    const joined = joinDigits(value);
+  const joined = joinDigits(value);
 
-    function setDigitAt(index: number, char: string) {
-        const next = joined.split('');
-        next[index] = char;
-        // Trim trailing spaces so the value object only reports what the user entered.
-        const compact = next.join('').replace(/\s+$/, '');
-        onChange(splitDigits(compact));
-    }
+  function setDigitAt(index: number, char: string) {
+    const next = joined.split('');
+    next[index] = char;
+    // Trim trailing spaces so the value object only reports what the user entered.
+    const compact = next.join('').replace(/\s+$/, '');
+    onChange(splitDigits(compact));
+  }
 
-    function handleChange(index: number) {
-        return (event: React.ChangeEvent<HTMLInputElement>) => {
-            const raw = event.target.value;
-            const digit = raw.replace(/\D/g, '').slice(-1);
-            if (!digit) return;
-            setDigitAt(index, digit);
-            const nextInput = inputs.current[index + 1];
-            if (nextInput) nextInput.focus();
-        };
-    }
+  function handleChange(index: number) {
+    return (event: React.ChangeEvent<HTMLInputElement>) => {
+      const raw = event.target.value;
+      const digit = raw.replace(/\D/g, '').slice(-1);
+      if (!digit) return;
+      setDigitAt(index, digit);
+      const nextInput = inputs.current[index + 1];
+      if (nextInput) nextInput.focus();
+    };
+  }
 
-    function handleKeyDown(index: number) {
-        return (event: React.KeyboardEvent<HTMLInputElement>) => {
-            if (event.key === 'Backspace') {
-                const currentChar = joined[index];
-                if (!currentChar || currentChar === ' ') {
-                    const prev = inputs.current[index - 1];
-                    if (prev) {
-                        event.preventDefault();
-                        prev.focus();
-                    }
-                } else {
-                    setDigitAt(index, ' ');
-                }
-            }
-        };
-    }
+  function handleKeyDown(index: number) {
+    return (event: React.KeyboardEvent<HTMLInputElement>) => {
+      if (event.key === 'Backspace') {
+        const currentChar = joined[index];
+        if (!currentChar || currentChar === ' ') {
+          const prev = inputs.current[index - 1];
+          if (prev) {
+            event.preventDefault();
+            prev.focus();
+          }
+        } else {
+          setDigitAt(index, ' ');
+        }
+      }
+    };
+  }
 
-    function handlePaste(event: React.ClipboardEvent<HTMLInputElement>) {
-        const digits = event.clipboardData.getData('text').replace(/\D/g, '').slice(0, TOTAL_DIGITS);
-        if (!digits) return;
-        event.preventDefault();
-        onChange(splitDigits(digits));
-        const nextIndex = Math.min(digits.length, TOTAL_DIGITS - 1);
-        inputs.current[nextIndex]?.focus();
-    }
+  function handlePaste(event: React.ClipboardEvent<HTMLInputElement>) {
+    const digits = event.clipboardData.getData('text').replace(/\D/g, '').slice(0, TOTAL_DIGITS);
+    if (!digits) return;
+    event.preventDefault();
+    onChange(splitDigits(digits));
+    const nextIndex = Math.min(digits.length, TOTAL_DIGITS - 1);
+    inputs.current[nextIndex]?.focus();
+  }
 
-    function renderBox(index: number) {
-        const tone: 'white' | 'red' = index < WHITE_DIGITS ? 'white' : 'red';
-        const char = joined[index];
-        return (
-            <DigitBox
-                key={index}
-                tone={tone}
-                inputProps={{
-                    inputMode: 'numeric',
-                    maxLength: 1,
-                    'aria-label': `${tone} digit ${(index % WHITE_DIGITS) + 1}`,
-                }}
-                inputRef={(el: HTMLInputElement | null) => {
-                    inputs.current[index] = el;
-                }}
-                value={char === ' ' ? '' : char ?? ''}
-                onChange={handleChange(index)}
-                onKeyDown={handleKeyDown(index)}
-                onPaste={handlePaste}
-            />
-        );
-    }
-
+  function renderBox(index: number) {
+    const tone: 'white' | 'red' = index < WHITE_DIGITS ? 'white' : 'red';
+    const char = joined[index];
     return (
-        <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
-            {Array.from({ length: WHITE_DIGITS }, (_, i) => renderBox(i))}
-            <Box sx={{ width: 8 }} />
-            {Array.from({ length: WHITE_DIGITS }, (_, i) => renderBox(WHITE_DIGITS + i))}
-        </Box>
+      <DigitBox
+        key={index}
+        tone={tone}
+        inputProps={{
+          inputMode: 'numeric',
+          maxLength: 1,
+          'aria-label': `${tone} digit ${(index % WHITE_DIGITS) + 1}`,
+        }}
+        inputRef={(el: HTMLInputElement | null) => {
+          inputs.current[index] = el;
+        }}
+        value={char === ' ' ? '' : (char ?? '')}
+        onChange={handleChange(index)}
+        onKeyDown={handleKeyDown(index)}
+        onPaste={handlePaste}
+      />
     );
+  }
+
+  return (
+    <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
+      {Array.from({ length: WHITE_DIGITS }, (_, i) => renderBox(i))}
+      <Box sx={{ width: 8 }} />
+      {Array.from({ length: WHITE_DIGITS }, (_, i) => renderBox(WHITE_DIGITS + i))}
+    </Box>
+  );
 }
 ```
 
@@ -1220,6 +1215,7 @@ git commit -m "Add MeterDigitInput component"
 ### Task 9: `EmptyState` component
 
 **Files:**
+
 - Create: `src/components/EmptyState.tsx`
 
 - [ ] **Step 1: Create `src/components/EmptyState.tsx`**
@@ -1231,30 +1227,30 @@ import Typography from '@mui/material/Typography';
 import AddIcon from '@mui/icons-material/Add';
 
 interface EmptyStateProps {
-    onCreateMeter: () => void;
+  onCreateMeter: () => void;
 }
 
 export function EmptyState({ onCreateMeter }: EmptyStateProps) {
-    return (
-        <Box
-            sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 2,
-                py: 8,
-                textAlign: 'center',
-            }}
-        >
-            <Typography variant="h5">No meters yet</Typography>
-            <Typography color="text.secondary" sx={{ maxWidth: 320 }}>
-                Add your first water meter to start recording readings.
-            </Typography>
-            <Button variant="contained" startIcon={<AddIcon />} onClick={onCreateMeter}>
-                Create your first meter
-            </Button>
-        </Box>
-    );
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 2,
+        py: 8,
+        textAlign: 'center',
+      }}
+    >
+      <Typography variant="h5">No meters yet</Typography>
+      <Typography color="text.secondary" sx={{ maxWidth: 320 }}>
+        Add your first water meter to start recording readings.
+      </Typography>
+      <Button variant="contained" startIcon={<AddIcon />} onClick={onCreateMeter}>
+        Create your first meter
+      </Button>
+    </Box>
+  );
 }
 ```
 
@@ -1278,6 +1274,7 @@ git commit -m "Add EmptyState component"
 ### Task 10: `MeterManagerDialog` component
 
 **Files:**
+
 - Create: `src/components/MeterManagerDialog.tsx`
 
 The dialog lists all meters with rename + delete buttons and offers an "Add meter" row at the bottom. Rename happens inline (a meter row toggles to an editable text field). Delete asks `window.confirm` first.
@@ -1301,130 +1298,127 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
-import {
-    useWaterTrackingMeters,
-    useWaterTrackingActions,
-} from '../store/useWaterTrackingStore';
+import { useWaterTrackingMeters, useWaterTrackingActions } from '../store/useWaterTrackingStore';
 
 interface MeterManagerDialogProps {
-    open: boolean;
-    onClose: () => void;
+  open: boolean;
+  onClose: () => void;
 }
 
 export function MeterManagerDialog({ open, onClose }: MeterManagerDialogProps) {
-    const meters = useWaterTrackingMeters();
-    const { addMeter, renameMeter, deleteMeter } = useWaterTrackingActions();
-    const [newName, setNewName] = useState('');
-    const [editingId, setEditingId] = useState<string | null>(null);
-    const [editingName, setEditingName] = useState('');
+  const meters = useWaterTrackingMeters();
+  const { addMeter, renameMeter, deleteMeter } = useWaterTrackingActions();
+  const [newName, setNewName] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState('');
 
-    function startEditing(id: string, currentName: string) {
-        setEditingId(id);
-        setEditingName(currentName);
+  function startEditing(id: string, currentName: string) {
+    setEditingId(id);
+    setEditingName(currentName);
+  }
+
+  function cancelEditing() {
+    setEditingId(null);
+    setEditingName('');
+  }
+
+  function commitEditing() {
+    if (editingId && editingName.trim()) {
+      renameMeter(editingId, editingName.trim());
     }
+    cancelEditing();
+  }
 
-    function cancelEditing() {
-        setEditingId(null);
-        setEditingName('');
+  function handleAdd() {
+    const trimmed = newName.trim();
+    if (!trimmed) return;
+    addMeter(trimmed);
+    setNewName('');
+  }
+
+  function handleDelete(id: string, meterName: string) {
+    if (window.confirm(`Delete meter "${meterName}" and all its readings?`)) {
+      deleteMeter(id);
     }
+  }
 
-    function commitEditing() {
-        if (editingId && editingName.trim()) {
-            renameMeter(editingId, editingName.trim());
-        }
-        cancelEditing();
-    }
-
-    function handleAdd() {
-        const trimmed = newName.trim();
-        if (!trimmed) return;
-        addMeter(trimmed);
-        setNewName('');
-    }
-
-    function handleDelete(id: string, meterName: string) {
-        if (window.confirm(`Delete meter "${meterName}" and all its readings?`)) {
-            deleteMeter(id);
-        }
-    }
-
-    return (
-        <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-            <DialogTitle>Manage meters</DialogTitle>
-            <DialogContent dividers>
-                <List dense disablePadding>
-                    {meters.map(meter => (
-                        <ListItem
-                            key={meter.id}
-                            secondaryAction={
-                                editingId === meter.id ? (
-                                    <Stack direction="row" spacing={0.5}>
-                                        <IconButton edge="end" onClick={commitEditing} aria-label="Save name">
-                                            <CheckIcon />
-                                        </IconButton>
-                                        <IconButton edge="end" onClick={cancelEditing} aria-label="Cancel">
-                                            <CloseIcon />
-                                        </IconButton>
-                                    </Stack>
-                                ) : (
-                                    <Stack direction="row" spacing={0.5}>
-                                        <IconButton
-                                            edge="end"
-                                            onClick={() => startEditing(meter.id, meter.name)}
-                                            aria-label="Rename"
-                                        >
-                                            <EditIcon />
-                                        </IconButton>
-                                        <IconButton
-                                            edge="end"
-                                            onClick={() => handleDelete(meter.id, meter.name)}
-                                            aria-label="Delete"
-                                        >
-                                            <DeleteIcon />
-                                        </IconButton>
-                                    </Stack>
-                                )
-                            }
-                        >
-                            {editingId === meter.id ? (
-                                <TextField
-                                    size="small"
-                                    value={editingName}
-                                    onChange={e => setEditingName(e.target.value)}
-                                    onKeyDown={e => {
-                                        if (e.key === 'Enter') commitEditing();
-                                        if (e.key === 'Escape') cancelEditing();
-                                    }}
-                                    autoFocus
-                                    fullWidth
-                                />
-                            ) : (
-                                <ListItemText primary={meter.name} />
-                            )}
-                        </ListItem>
-                    ))}
-                </List>
-                <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
-                    <TextField
-                        size="small"
-                        label="New meter name"
-                        value={newName}
-                        onChange={e => setNewName(e.target.value)}
-                        onKeyDown={e => {
-                            if (e.key === 'Enter') handleAdd();
-                        }}
-                        fullWidth
-                    />
-                    <Button variant="contained" onClick={handleAdd} disabled={!newName.trim()}>
-                        Add
-                    </Button>
-                </Stack>
-            </DialogContent>
-            <DialogActions>
-                <Button onClick={onClose}>Done</Button>
-            </DialogActions>
-        </Dialog>
-    );
+  return (
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+      <DialogTitle>Manage meters</DialogTitle>
+      <DialogContent dividers>
+        <List dense disablePadding>
+          {meters.map(meter => (
+            <ListItem
+              key={meter.id}
+              secondaryAction={
+                editingId === meter.id ? (
+                  <Stack direction="row" spacing={0.5}>
+                    <IconButton edge="end" onClick={commitEditing} aria-label="Save name">
+                      <CheckIcon />
+                    </IconButton>
+                    <IconButton edge="end" onClick={cancelEditing} aria-label="Cancel">
+                      <CloseIcon />
+                    </IconButton>
+                  </Stack>
+                ) : (
+                  <Stack direction="row" spacing={0.5}>
+                    <IconButton
+                      edge="end"
+                      onClick={() => startEditing(meter.id, meter.name)}
+                      aria-label="Rename"
+                    >
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton
+                      edge="end"
+                      onClick={() => handleDelete(meter.id, meter.name)}
+                      aria-label="Delete"
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Stack>
+                )
+              }
+            >
+              {editingId === meter.id ? (
+                <TextField
+                  size="small"
+                  value={editingName}
+                  onChange={e => setEditingName(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') commitEditing();
+                    if (e.key === 'Escape') cancelEditing();
+                  }}
+                  autoFocus
+                  fullWidth
+                />
+              ) : (
+                <ListItemText primary={meter.name} />
+              )}
+            </ListItem>
+          ))}
+        </List>
+        <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
+          <TextField
+            size="small"
+            label="New meter name"
+            value={newName}
+            onChange={e => setNewName(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter') handleAdd();
+            }}
+            fullWidth
+          />
+          <Button variant="contained" onClick={handleAdd} disabled={!newName.trim()}>
+            Add
+          </Button>
+        </Stack>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>Done</Button>
+      </DialogActions>
+    </Dialog>
+  );
 }
 ```
 
@@ -1448,6 +1442,7 @@ git commit -m "Add MeterManagerDialog component"
 ### Task 11: `AppHeader` component
 
 **Files:**
+
 - Create: `src/components/AppHeader.tsx`
 
 - [ ] **Step 1: Create `src/components/AppHeader.tsx`**
@@ -1463,53 +1458,49 @@ import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import SettingsIcon from '@mui/icons-material/Settings';
 import {
-    useWaterTrackingMeters,
-    useWaterTrackingSelectedMeterId,
-    useWaterTrackingActions,
+  useWaterTrackingMeters,
+  useWaterTrackingSelectedMeterId,
+  useWaterTrackingActions,
 } from '../store/useWaterTrackingStore';
 
 interface AppHeaderProps {
-    onManageMeters: () => void;
+  onManageMeters: () => void;
 }
 
 export function AppHeader({ onManageMeters }: AppHeaderProps) {
-    const meters = useWaterTrackingMeters();
-    const selectedMeterId = useWaterTrackingSelectedMeterId();
-    const { selectMeter } = useWaterTrackingActions();
+  const meters = useWaterTrackingMeters();
+  const selectedMeterId = useWaterTrackingSelectedMeterId();
+  const { selectMeter } = useWaterTrackingActions();
 
-    return (
-        <AppBar position="static" color="default" elevation={0}>
-            <Toolbar sx={{ gap: 2 }}>
-                <Typography variant="h6" sx={{ flexGrow: 1 }}>
-                    Water Tracking
-                </Typography>
-                {meters.length > 0 && (
-                    <FormControl size="small" sx={{ minWidth: 180 }}>
-                        <InputLabel id="meter-select-label">Meter</InputLabel>
-                        <Select
-                            labelId="meter-select-label"
-                            label="Meter"
-                            value={selectedMeterId ?? ''}
-                            onChange={e => selectMeter(e.target.value || null)}
-                        >
-                            {meters.map(meter => (
-                                <MenuItem key={meter.id} value={meter.id}>
-                                    {meter.name}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                )}
-                <Button
-                    color="inherit"
-                    startIcon={<SettingsIcon />}
-                    onClick={onManageMeters}
-                >
-                    Meters
-                </Button>
-            </Toolbar>
-        </AppBar>
-    );
+  return (
+    <AppBar position="static" color="default" elevation={0}>
+      <Toolbar sx={{ gap: 2 }}>
+        <Typography variant="h6" sx={{ flexGrow: 1 }}>
+          Water Tracking
+        </Typography>
+        {meters.length > 0 && (
+          <FormControl size="small" sx={{ minWidth: 180 }}>
+            <InputLabel id="meter-select-label">Meter</InputLabel>
+            <Select
+              labelId="meter-select-label"
+              label="Meter"
+              value={selectedMeterId ?? ''}
+              onChange={e => selectMeter(e.target.value || null)}
+            >
+              {meters.map(meter => (
+                <MenuItem key={meter.id} value={meter.id}>
+                  {meter.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        )}
+        <Button color="inherit" startIcon={<SettingsIcon />} onClick={onManageMeters}>
+          Meters
+        </Button>
+      </Toolbar>
+    </AppBar>
+  );
 }
 ```
 
@@ -1533,6 +1524,7 @@ git commit -m "Add AppHeader component"
 ### Task 12: `ReadingFormDialog` component
 
 **Files:**
+
 - Create: `src/components/ReadingFormDialog.tsx`
 
 The dialog creates a new reading or edits an existing one. It contains the `MeterDigitInput` plus a `DateTimePicker`. Submit is disabled until all 8 digits are present. If the new value is lower than the most recent prior reading for the same meter, the form shows a warning and requires a second confirmation.
@@ -1552,146 +1544,133 @@ import FormHelperText from '@mui/material/FormHelperText';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { MeterDigitInput, type DigitValue } from './MeterDigitInput';
 import type { Reading } from '../types';
-import {
-    useWaterTrackingActions,
-    useWaterTrackingReadings,
-} from '../store/useWaterTrackingStore';
+import { useWaterTrackingActions, useWaterTrackingReadings } from '../store/useWaterTrackingStore';
 
 interface ReadingFormDialogProps {
-    open: boolean;
-    onClose: () => void;
-    meterId: string;
-    editingReading: Reading | null;
+  open: boolean;
+  onClose: () => void;
+  meterId: string;
+  editingReading: Reading | null;
 }
 
 function readingToDigits(reading: number): DigitValue {
-    const total = Math.round(reading * 10000);
-    const whole = Math.floor(total / 10000);
-    const fraction = total - whole * 10000;
-    return {
-        white: String(whole).padStart(4, '0'),
-        red: String(fraction).padStart(4, '0'),
-    };
+  const total = Math.round(reading * 10000);
+  const whole = Math.floor(total / 10000);
+  const fraction = total - whole * 10000;
+  return {
+    white: String(whole).padStart(4, '0'),
+    red: String(fraction).padStart(4, '0'),
+  };
 }
 
 function digitsToReading(value: DigitValue): number | null {
-    if (value.white.length !== 4 || value.red.length !== 4) return null;
-    return Number(value.white) + Number(value.red) / 10000;
+  if (value.white.length !== 4 || value.red.length !== 4) return null;
+  return Number(value.white) + Number(value.red) / 10000;
 }
 
 export function ReadingFormDialog({
-    open,
-    onClose,
-    meterId,
-    editingReading,
+  open,
+  onClose,
+  meterId,
+  editingReading,
 }: ReadingFormDialogProps) {
-    const { addReading, updateReading } = useWaterTrackingActions();
-    const readings = useWaterTrackingReadings();
+  const { addReading, updateReading } = useWaterTrackingActions();
+  const readings = useWaterTrackingReadings();
 
-    const [digits, setDigits] = useState<DigitValue>({ white: '', red: '' });
-    const [takenAt, setTakenAt] = useState<Date | null>(new Date());
-    const [acknowledgeDecrease, setAcknowledgeDecrease] = useState(false);
+  const [digits, setDigits] = useState<DigitValue>({ white: '', red: '' });
+  const [takenAt, setTakenAt] = useState<Date | null>(new Date());
+  const [acknowledgeDecrease, setAcknowledgeDecrease] = useState(false);
 
-    useEffect(() => {
-        if (!open) return;
-        if (editingReading) {
-            setDigits(readingToDigits(editingReading.reading));
-            setTakenAt(new Date(editingReading.takenAt));
-        } else {
-            setDigits({ white: '', red: '' });
-            setTakenAt(new Date());
-        }
-        setAcknowledgeDecrease(false);
-    }, [open, editingReading]);
-
-    const numericReading = digitsToReading(digits);
-
-    const previousReading = useMemo(() => {
-        if (!takenAt) return null;
-        const takenAtIso = takenAt.toISOString();
-        const prior = readings
-            .filter(r => r.meterId === meterId && r.id !== editingReading?.id)
-            .filter(r => r.takenAt < takenAtIso)
-            .sort((a, b) => (a.takenAt < b.takenAt ? 1 : -1));
-        return prior[0] ?? null;
-    }, [readings, meterId, takenAt, editingReading]);
-
-    const isFuture = takenAt ? takenAt.getTime() > Date.now() : false;
-    const decreased =
-        numericReading !== null &&
-        previousReading !== null &&
-        numericReading < previousReading.reading;
-
-    const canSubmit =
-        numericReading !== null &&
-        takenAt !== null &&
-        !isFuture &&
-        (!decreased || acknowledgeDecrease);
-
-    function handleSubmit() {
-        if (!canSubmit || numericReading === null || !takenAt) return;
-        const payload = {
-            meterId,
-            reading: numericReading,
-            takenAt: takenAt.toISOString(),
-        };
-        if (editingReading) {
-            updateReading(editingReading.id, payload);
-        } else {
-            addReading(payload);
-        }
-        onClose();
+  useEffect(() => {
+    if (!open) return;
+    if (editingReading) {
+      setDigits(readingToDigits(editingReading.reading));
+      setTakenAt(new Date(editingReading.takenAt));
+    } else {
+      setDigits({ white: '', red: '' });
+      setTakenAt(new Date());
     }
+    setAcknowledgeDecrease(false);
+  }, [open, editingReading]);
 
-    return (
-        <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-            <DialogTitle>
-                {editingReading ? 'Edit reading' : 'New reading'}
-            </DialogTitle>
-            <DialogContent dividers>
-                <Stack spacing={3} sx={{ mt: 1 }}>
-                    <div>
-                        <MeterDigitInput value={digits} onChange={setDigits} />
-                        <FormHelperText>4 white digits (m³), then 4 red digits (decimal)</FormHelperText>
-                    </div>
-                    <DateTimePicker
-                        label="Date and time"
-                        value={takenAt}
-                        onChange={setTakenAt}
-                        disableFuture
-                    />
-                    {isFuture && (
-                        <Alert severity="error">Date cannot be in the future.</Alert>
-                    )}
-                    {decreased && (
-                        <Alert
-                            severity="warning"
-                            action={
-                                <Button
-                                    color="inherit"
-                                    size="small"
-                                    onClick={() => setAcknowledgeDecrease(true)}
-                                    disabled={acknowledgeDecrease}
-                                >
-                                    {acknowledgeDecrease ? 'Acknowledged' : 'Save anyway'}
-                                </Button>
-                            }
-                        >
-                            This reading is lower than the previous one
-                            ({previousReading?.reading.toFixed(4)} m³). Water meters
-                            usually only go up.
-                        </Alert>
-                    )}
-                </Stack>
-            </DialogContent>
-            <DialogActions>
-                <Button onClick={onClose}>Cancel</Button>
-                <Button variant="contained" onClick={handleSubmit} disabled={!canSubmit}>
-                    {editingReading ? 'Save changes' : 'Add reading'}
+  const numericReading = digitsToReading(digits);
+
+  const previousReading = useMemo(() => {
+    if (!takenAt) return null;
+    const takenAtIso = takenAt.toISOString();
+    const prior = readings
+      .filter(r => r.meterId === meterId && r.id !== editingReading?.id)
+      .filter(r => r.takenAt < takenAtIso)
+      .sort((a, b) => (a.takenAt < b.takenAt ? 1 : -1));
+    return prior[0] ?? null;
+  }, [readings, meterId, takenAt, editingReading]);
+
+  const isFuture = takenAt ? takenAt.getTime() > Date.now() : false;
+  const decreased =
+    numericReading !== null && previousReading !== null && numericReading < previousReading.reading;
+
+  const canSubmit =
+    numericReading !== null && takenAt !== null && !isFuture && (!decreased || acknowledgeDecrease);
+
+  function handleSubmit() {
+    if (!canSubmit || numericReading === null || !takenAt) return;
+    const payload = {
+      meterId,
+      reading: numericReading,
+      takenAt: takenAt.toISOString(),
+    };
+    if (editingReading) {
+      updateReading(editingReading.id, payload);
+    } else {
+      addReading(payload);
+    }
+    onClose();
+  }
+
+  return (
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+      <DialogTitle>{editingReading ? 'Edit reading' : 'New reading'}</DialogTitle>
+      <DialogContent dividers>
+        <Stack spacing={3} sx={{ mt: 1 }}>
+          <div>
+            <MeterDigitInput value={digits} onChange={setDigits} />
+            <FormHelperText>4 white digits (m³), then 4 red digits (decimal)</FormHelperText>
+          </div>
+          <DateTimePicker
+            label="Date and time"
+            value={takenAt}
+            onChange={setTakenAt}
+            disableFuture
+          />
+          {isFuture && <Alert severity="error">Date cannot be in the future.</Alert>}
+          {decreased && (
+            <Alert
+              severity="warning"
+              action={
+                <Button
+                  color="inherit"
+                  size="small"
+                  onClick={() => setAcknowledgeDecrease(true)}
+                  disabled={acknowledgeDecrease}
+                >
+                  {acknowledgeDecrease ? 'Acknowledged' : 'Save anyway'}
                 </Button>
-            </DialogActions>
-        </Dialog>
-    );
+              }
+            >
+              This reading is lower than the previous one ({previousReading?.reading.toFixed(4)}{' '}
+              m³). Water meters usually only go up.
+            </Alert>
+          )}
+        </Stack>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>Cancel</Button>
+        <Button variant="contained" onClick={handleSubmit} disabled={!canSubmit}>
+          {editingReading ? 'Save changes' : 'Add reading'}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
 }
 ```
 
@@ -1715,6 +1694,7 @@ git commit -m "Add ReadingFormDialog component"
 ### Task 13: `ReadingList` component
 
 **Files:**
+
 - Create: `src/components/ReadingList.tsx`
 
 The list shows all readings for the currently-selected meter, sorted newest-first, with a "Usage since previous" column showing the delta against the previous-in-time reading. Empty state and the "Add reading" CTA live here.
@@ -1742,115 +1722,112 @@ import { format } from 'date-fns';
 import { ReadingFormDialog } from './ReadingFormDialog';
 import { formatDelta, formatReading } from '../lib/formatting';
 import type { Reading } from '../types';
-import {
-    useWaterTrackingActions,
-    useWaterTrackingReadings,
-} from '../store/useWaterTrackingStore';
+import { useWaterTrackingActions, useWaterTrackingReadings } from '../store/useWaterTrackingStore';
 
 interface ReadingListProps {
-    meterId: string;
+  meterId: string;
 }
 
 interface DisplayRow {
-    reading: Reading;
-    delta: number | null;
+  reading: Reading;
+  delta: number | null;
 }
 
 export function ReadingList({ meterId }: ReadingListProps) {
-    const readings = useWaterTrackingReadings();
-    const { deleteReading } = useWaterTrackingActions();
-    const [formOpen, setFormOpen] = useState(false);
-    const [editing, setEditing] = useState<Reading | null>(null);
+  const readings = useWaterTrackingReadings();
+  const { deleteReading } = useWaterTrackingActions();
+  const [formOpen, setFormOpen] = useState(false);
+  const [editing, setEditing] = useState<Reading | null>(null);
 
-    const rows = useMemo<DisplayRow[]>(() => {
-        const sortedAsc = readings
-            .filter(r => r.meterId === meterId)
-            .slice()
-            .sort((a, b) => (a.takenAt < b.takenAt ? -1 : 1));
+  const rows = useMemo<DisplayRow[]>(() => {
+    const sortedAsc = readings
+      .filter(r => r.meterId === meterId)
+      .slice()
+      .sort((a, b) => (a.takenAt < b.takenAt ? -1 : 1));
 
-        const withDeltas: DisplayRow[] = sortedAsc.map((reading, index) => ({
-            reading,
-            delta: index === 0 ? null : reading.reading - sortedAsc[index - 1].reading,
-        }));
+    const withDeltas: DisplayRow[] = sortedAsc.map((reading, index) => ({
+      reading,
+      delta: index === 0 ? null : reading.reading - sortedAsc[index - 1].reading,
+    }));
 
-        return withDeltas.reverse(); // newest first
-    }, [readings, meterId]);
+    return withDeltas.reverse(); // newest first
+  }, [readings, meterId]);
 
-    function openNew() {
-        setEditing(null);
-        setFormOpen(true);
+  function openNew() {
+    setEditing(null);
+    setFormOpen(true);
+  }
+
+  function openEdit(reading: Reading) {
+    setEditing(reading);
+    setFormOpen(true);
+  }
+
+  function handleDelete(reading: Reading) {
+    if (window.confirm('Delete this reading?')) {
+      deleteReading(reading.id);
     }
+  }
 
-    function openEdit(reading: Reading) {
-        setEditing(reading);
-        setFormOpen(true);
-    }
-
-    function handleDelete(reading: Reading) {
-        if (window.confirm('Delete this reading?')) {
-            deleteReading(reading.id);
-        }
-    }
-
-    return (
-        <Box>
-            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-                <Typography variant="h6">Readings</Typography>
-                <Button variant="contained" startIcon={<AddIcon />} onClick={openNew}>
-                    Add reading
-                </Button>
-            </Stack>
-            {rows.length === 0 ? (
-                <Paper variant="outlined" sx={{ p: 4, textAlign: 'center' }}>
-                    <Typography color="text.secondary">
-                        No readings yet. Add your first reading.
-                    </Typography>
-                </Paper>
-            ) : (
-                <TableContainer component={Paper} variant="outlined">
-                    <Table size="small">
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>Date / time</TableCell>
-                                <TableCell>Reading</TableCell>
-                                <TableCell>Usage since previous</TableCell>
-                                <TableCell align="right">Actions</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {rows.map(({ reading, delta }) => (
-                                <TableRow key={reading.id}>
-                                    <TableCell>
-                                        {format(new Date(reading.takenAt), 'dd MMM yyyy, HH:mm')}
-                                    </TableCell>
-                                    <TableCell sx={{ fontFamily: 'monospace' }}>
-                                        {formatReading(reading.reading)}
-                                    </TableCell>
-                                    <TableCell sx={{ fontFamily: 'monospace' }}>
-                                        {delta === null ? '—' : formatDelta(delta)}
-                                    </TableCell>
-                                    <TableCell align="right">
-                                        <IconButton size="small" onClick={() => openEdit(reading)} aria-label="Edit">
-                                            <EditIcon fontSize="small" />
-                                        </IconButton>
-                                        <IconButton size="small" onClick={() => handleDelete(reading)} aria-label="Delete">
-                                            <DeleteIcon fontSize="small" />
-                                        </IconButton>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-            )}
-            <ReadingFormDialog
-                open={formOpen}
-                onClose={() => setFormOpen(false)}
-                meterId={meterId}
-                editingReading={editing}
-            />
-        </Box>
-    );
+  return (
+    <Box>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+        <Typography variant="h6">Readings</Typography>
+        <Button variant="contained" startIcon={<AddIcon />} onClick={openNew}>
+          Add reading
+        </Button>
+      </Stack>
+      {rows.length === 0 ? (
+        <Paper variant="outlined" sx={{ p: 4, textAlign: 'center' }}>
+          <Typography color="text.secondary">No readings yet. Add your first reading.</Typography>
+        </Paper>
+      ) : (
+        <TableContainer component={Paper} variant="outlined">
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>Date / time</TableCell>
+                <TableCell>Reading</TableCell>
+                <TableCell>Usage since previous</TableCell>
+                <TableCell align="right">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {rows.map(({ reading, delta }) => (
+                <TableRow key={reading.id}>
+                  <TableCell>{format(new Date(reading.takenAt), 'dd MMM yyyy, HH:mm')}</TableCell>
+                  <TableCell sx={{ fontFamily: 'monospace' }}>
+                    {formatReading(reading.reading)}
+                  </TableCell>
+                  <TableCell sx={{ fontFamily: 'monospace' }}>
+                    {delta === null ? '—' : formatDelta(delta)}
+                  </TableCell>
+                  <TableCell align="right">
+                    <IconButton size="small" onClick={() => openEdit(reading)} aria-label="Edit">
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleDelete(reading)}
+                      aria-label="Delete"
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
+      <ReadingFormDialog
+        open={formOpen}
+        onClose={() => setFormOpen(false)}
+        meterId={meterId}
+        editingReading={editing}
+      />
+    </Box>
+  );
 }
 ```
 
@@ -1874,6 +1851,7 @@ git commit -m "Add ReadingList component with usage deltas"
 ### Task 14: `UsageChart` component
 
 **Files:**
+
 - Create: `src/components/UsageChart.tsx`
 
 - [ ] **Step 1: Create `src/components/UsageChart.tsx`**
@@ -1887,60 +1865,56 @@ import { LineChart } from '@mui/x-charts/LineChart';
 import { useWaterTrackingReadings } from '../store/useWaterTrackingStore';
 
 interface UsageChartProps {
-    meterId: string;
+  meterId: string;
 }
 
 export function UsageChart({ meterId }: UsageChartProps) {
-    const readings = useWaterTrackingReadings();
+  const readings = useWaterTrackingReadings();
 
-    const series = useMemo(() => {
-        const sorted = readings
-            .filter(r => r.meterId === meterId)
-            .slice()
-            .sort((a, b) => (a.takenAt < b.takenAt ? -1 : 1));
-        const xAxis = sorted.map(r => new Date(r.takenAt));
-        const values = sorted.map(r => r.reading);
-        return { xAxis, values };
-    }, [readings, meterId]);
+  const series = useMemo(() => {
+    const sorted = readings
+      .filter(r => r.meterId === meterId)
+      .slice()
+      .sort((a, b) => (a.takenAt < b.takenAt ? -1 : 1));
+    const xAxis = sorted.map(r => new Date(r.takenAt));
+    const values = sorted.map(r => r.reading);
+    return { xAxis, values };
+  }, [readings, meterId]);
 
-    if (series.values.length < 2) {
-        return (
-            <Paper variant="outlined" sx={{ p: 4, textAlign: 'center', mt: 3 }}>
-                <Typography color="text.secondary">
-                    Add another reading to see usage over time.
-                </Typography>
-            </Paper>
-        );
-    }
-
+  if (series.values.length < 2) {
     return (
-        <Box sx={{ mt: 3 }}>
-            <Typography variant="h6" gutterBottom>
-                Usage over time
-            </Typography>
-            <Paper variant="outlined" sx={{ p: 2 }}>
-                <LineChart
-                    height={280}
-                    xAxis={[
-                        {
-                            data: series.xAxis,
-                            scaleType: 'time',
-                            valueFormatter: (value: Date) =>
-                                value.toLocaleDateString(),
-                        },
-                    ]}
-                    series={[
-                        {
-                            data: series.values,
-                            label: 'Reading (m³)',
-                            valueFormatter: value =>
-                                value === null ? '' : `${value.toFixed(4)} m³`,
-                        },
-                    ]}
-                />
-            </Paper>
-        </Box>
+      <Paper variant="outlined" sx={{ p: 4, textAlign: 'center', mt: 3 }}>
+        <Typography color="text.secondary">Add another reading to see usage over time.</Typography>
+      </Paper>
     );
+  }
+
+  return (
+    <Box sx={{ mt: 3 }}>
+      <Typography variant="h6" gutterBottom>
+        Usage over time
+      </Typography>
+      <Paper variant="outlined" sx={{ p: 2 }}>
+        <LineChart
+          height={280}
+          xAxis={[
+            {
+              data: series.xAxis,
+              scaleType: 'time',
+              valueFormatter: (value: Date) => value.toLocaleDateString(),
+            },
+          ]}
+          series={[
+            {
+              data: series.values,
+              label: 'Reading (m³)',
+              valueFormatter: value => (value === null ? '' : `${value.toFixed(4)} m³`),
+            },
+          ]}
+        />
+      </Paper>
+    </Box>
+  );
 }
 ```
 
@@ -1964,6 +1938,7 @@ git commit -m "Add UsageChart component"
 ### Task 15: Wire everything together in `App.tsx`
 
 **Files:**
+
 - Modify: `src/App.tsx`
 
 - [ ] **Step 1: Replace `src/App.tsx` with the full layout**
@@ -1978,34 +1953,34 @@ import { MeterManagerDialog } from './components/MeterManagerDialog';
 import { ReadingList } from './components/ReadingList';
 import { UsageChart } from './components/UsageChart';
 import {
-    useWaterTrackingMeters,
-    useWaterTrackingSelectedMeterId,
+  useWaterTrackingMeters,
+  useWaterTrackingSelectedMeterId,
 } from './store/useWaterTrackingStore';
 
 function App() {
-    const meters = useWaterTrackingMeters();
-    const selectedMeterId = useWaterTrackingSelectedMeterId();
-    const [managerOpen, setManagerOpen] = useState(false);
+  const meters = useWaterTrackingMeters();
+  const selectedMeterId = useWaterTrackingSelectedMeterId();
+  const [managerOpen, setManagerOpen] = useState(false);
 
-    const noMeters = meters.length === 0;
-    const meterToShow = selectedMeterId ?? meters[0]?.id ?? null;
+  const noMeters = meters.length === 0;
+  const meterToShow = selectedMeterId ?? meters[0]?.id ?? null;
 
-    return (
-        <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-            <AppHeader onManageMeters={() => setManagerOpen(true)} />
-            <Container maxWidth="md" sx={{ py: 4 }}>
-                {noMeters ? (
-                    <EmptyState onCreateMeter={() => setManagerOpen(true)} />
-                ) : meterToShow ? (
-                    <>
-                        <ReadingList meterId={meterToShow} />
-                        <UsageChart meterId={meterToShow} />
-                    </>
-                ) : null}
-            </Container>
-            <MeterManagerDialog open={managerOpen} onClose={() => setManagerOpen(false)} />
-        </Box>
-    );
+  return (
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+      <AppHeader onManageMeters={() => setManagerOpen(true)} />
+      <Container maxWidth="md" sx={{ py: 4 }}>
+        {noMeters ? (
+          <EmptyState onCreateMeter={() => setManagerOpen(true)} />
+        ) : meterToShow ? (
+          <>
+            <ReadingList meterId={meterToShow} />
+            <UsageChart meterId={meterToShow} />
+          </>
+        ) : null}
+      </Container>
+      <MeterManagerDialog open={managerOpen} onClose={() => setManagerOpen(false)} />
+    </Box>
+  );
 }
 
 export default App;
@@ -2041,7 +2016,7 @@ In the browser at `http://localhost:5173`:
 - Click "Add reading", enter `1234.5678`, leave date as now, click "Add reading"
 - The reading appears in the table with `—` for usage
 - Add a second reading taken later with a higher value; verify the delta column shows the correct `+N.NNNN m³ / +NNN.N L`
-- Add a second reading taken later with a *lower* value; verify the warning appears and submit is disabled until "Save anyway" is clicked
+- Add a second reading taken later with a _lower_ value; verify the warning appears and submit is disabled until "Save anyway" is clicked
 - Edit an existing reading; verify the value and date pre-populate correctly
 - Delete a reading; verify the confirmation prompt
 - Open "Meters", rename "Main" to "House"; verify the header dropdown updates
@@ -2063,6 +2038,7 @@ git commit -m "Wire app shell together"
 ## Self-Review
 
 **Spec coverage:**
+
 - Data model (Meter, Reading) → Task 4
 - Zustand store with devtools + persist + immer, conventions matching the example → Tasks 6, 7
 - 4 white + 4 red digit input → Task 8

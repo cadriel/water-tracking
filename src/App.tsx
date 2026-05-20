@@ -8,35 +8,35 @@ import { ReadingList } from './components/ReadingList';
 import { UsageChart } from './components/UsageChart';
 import { UsageStats } from './components/UsageStats';
 import {
-    useWaterTrackingMeters,
-    useWaterTrackingSelectedMeterId,
+  useWaterTrackingMeters,
+  useWaterTrackingSelectedMeterId,
 } from './store/useWaterTrackingStore';
 
 function App() {
-    const meters = useWaterTrackingMeters();
-    const selectedMeterId = useWaterTrackingSelectedMeterId();
-    const [managerOpen, setManagerOpen] = useState(false);
+  const meters = useWaterTrackingMeters();
+  const selectedMeterId = useWaterTrackingSelectedMeterId();
+  const [managerOpen, setManagerOpen] = useState(false);
 
-    const noMeters = meters.length === 0;
-    const meterToShow = selectedMeterId ?? meters[0]?.id ?? null;
+  const noMeters = meters.length === 0;
+  const meterToShow = selectedMeterId ?? meters[0]?.id ?? null;
 
-    return (
-        <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-            <AppHeader onManageMeters={() => setManagerOpen(true)} />
-            <Container maxWidth="md" sx={{ py: 4 }}>
-                {noMeters ? (
-                    <EmptyState onCreateMeter={() => setManagerOpen(true)} />
-                ) : meterToShow ? (
-                    <>
-                        <ReadingList meterId={meterToShow} />
-                        <UsageStats meterId={meterToShow} />
-                        <UsageChart meterId={meterToShow} />
-                    </>
-                ) : null}
-            </Container>
-            <MeterManagerDialog open={managerOpen} onClose={() => setManagerOpen(false)} />
-        </Box>
-    );
+  return (
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+      <AppHeader onManageMeters={() => setManagerOpen(true)} />
+      <Container maxWidth="md" sx={{ py: 4 }}>
+        {noMeters ? (
+          <EmptyState onCreateMeter={() => setManagerOpen(true)} />
+        ) : meterToShow ? (
+          <>
+            <ReadingList meterId={meterToShow} />
+            <UsageStats meterId={meterToShow} />
+            <UsageChart meterId={meterToShow} />
+          </>
+        ) : null}
+      </Container>
+      <MeterManagerDialog open={managerOpen} onClose={() => setManagerOpen(false)} />
+    </Box>
+  );
 }
 
 export default App;

@@ -13,6 +13,7 @@ Data is persisted client-side in `localStorage` only — no backend, no auth. Th
 ## Scope
 
 **In scope**
+
 - Create, edit, delete meters (each with a user-supplied name)
 - Create, edit, delete readings on the selected meter
 - Each reading has a value (4 white + 4 red digits) plus a date and time (defaulting to "now")
@@ -22,6 +23,7 @@ Data is persisted client-side in `localStorage` only — no backend, no auth. Th
 - Persist all state to `localStorage`
 
 **Out of scope (for now)**
+
 - Authentication, sync between devices, multi-user
 - Export / import (CSV, JSON) — may be added later
 - Tariffs, cost calculation, billing periods
@@ -32,22 +34,23 @@ Data is persisted client-side in `localStorage` only — no backend, no auth. Th
 
 ```ts
 type Meter = {
-  id: string;          // uuid
-  name: string;        // user-supplied, e.g. "Main", "Irrigation"
-  createdAt: string;   // ISO 8601
+  id: string; // uuid
+  name: string; // user-supplied, e.g. "Main", "Irrigation"
+  createdAt: string; // ISO 8601
 };
 
 type Reading = {
-  id: string;          // uuid
-  meterId: string;     // FK -> Meter.id
-  reading: number;     // decimal m³, e.g. 1234.5678
-  takenAt: string;     // ISO 8601 timestamp the read was taken
-  createdAt: string;   // ISO 8601 timestamp the read was entered into the app
+  id: string; // uuid
+  meterId: string; // FK -> Meter.id
+  reading: number; // decimal m³, e.g. 1234.5678
+  takenAt: string; // ISO 8601 timestamp the read was taken
+  createdAt: string; // ISO 8601 timestamp the read was entered into the app
 };
 ```
 
 The reading value is stored as a single `number` (decimal m³) rather than as
 two integer fields. Reasoning:
+
 - Math for usage deltas and charts becomes trivial (`a.reading - b.reading`)
 - Sorting and comparison work directly
 - White / red digits are a presentation concern, derived on the fly:
@@ -82,67 +85,68 @@ import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
 export interface WaterTrackingState {
-    meters: Meter[];
-    readings: Reading[];
-    selectedMeterId: string | null;
+  meters: Meter[];
+  readings: Reading[];
+  selectedMeterId: string | null;
 }
 
 interface WaterTrackingActions {
-    actions: {
-        // meter actions
-        addMeter: (name: string) => string;                              // returns new meter id
-        renameMeter: (id: string, name: string) => void;
-        deleteMeter: (id: string) => void;                               // cascades to readings
-        selectMeter: (id: string | null) => void;
+  actions: {
+    // meter actions
+    addMeter: (name: string) => string; // returns new meter id
+    renameMeter: (id: string, name: string) => void;
+    deleteMeter: (id: string) => void; // cascades to readings
+    selectMeter: (id: string | null) => void;
 
-        // reading actions
-        addReading: (input: NewReadingInput) => void;
-        updateReading: (id: string, patch: Partial<NewReadingInput>) => void;
-        deleteReading: (id: string) => void;
-    };
+    // reading actions
+    addReading: (input: NewReadingInput) => void;
+    updateReading: (id: string, patch: Partial<NewReadingInput>) => void;
+    deleteReading: (id: string) => void;
+  };
 }
 
 type NewReadingInput = {
-    meterId: string;
-    reading: number;
-    takenAt: string;
+  meterId: string;
+  reading: number;
+  takenAt: string;
 };
 
 const name = 'water-tracking-store';
 
 const initialState: WaterTrackingState = {
-    meters: [],
-    readings: [],
-    selectedMeterId: null,
+  meters: [],
+  readings: [],
+  selectedMeterId: null,
 };
 
 const useWaterTrackingStore = create<WaterTrackingState & WaterTrackingActions>()(
-    devtools(
-        persist(
-            immer(set => ({
-                ...initialState,
-                actions: {
-                    // ...implementations using set(state => { state.x = ... })
-                },
-            })),
-            {
-                name,
-                version: 0,
-                partialize: state => ({
-                    meters: state.meters,
-                    readings: state.readings,
-                    selectedMeterId: state.selectedMeterId,
-                }),
-            }
-        ),
-        { name }
-    )
+  devtools(
+    persist(
+      immer(set => ({
+        ...initialState,
+        actions: {
+          // ...implementations using set(state => { state.x = ... })
+        },
+      })),
+      {
+        name,
+        version: 0,
+        partialize: state => ({
+          meters: state.meters,
+          readings: state.readings,
+          selectedMeterId: state.selectedMeterId,
+        }),
+      },
+    ),
+    { name },
+  ),
 );
 
 // Selector hooks — one per slice + actions
 export const useWaterTrackingMeters = () => useWaterTrackingStore(state => state.meters);
 export const useWaterTrackingReadings = () => useWaterTrackingStore(state => state.readings);
-export const useWaterTrackingSelectedMeterId = () => useWaterTrackingStore(state => state.selectedMeterId);
+export const useWaterTrackingSelectedMeterId = () =>
+  useWaterTrackingStore(state => state.selectedMeterId);
 export const useWaterTrackingActions = () => useWaterTrackingStore(state => state.actions);
 ```
 
@@ -189,21 +193,25 @@ src/
 ## Component Behaviour
 
 ### `AppHeader`
+
 - Title ("Water Tracking")
 - Meter `<Select>` showing the active meter name
 - "Manage meters" button → opens `MeterManagerDialog`
 - Hidden / replaced by empty-state CTA when no meters exist yet
 
 ### `MeterManagerDialog`
+
 - Lists existing meters with rename + delete affordances
 - "Add meter" field with name input + add button
 - Delete asks for confirmation (cascades to readings)
 
 ### `EmptyState`
+
 - Rendered when `meters.length === 0`
 - Single CTA: "Create your first meter" → opens `MeterManagerDialog` in add mode
 
 ### `ReadingList`
+
 - Table columns: Date/time | Reading (`1234.5678 m³`) | Usage since previous (`+0.0123 m³ / +12.3 L`) | Actions (edit / delete)
 - Sorted by `takenAt` descending by default
 - Delete asks for confirmation
@@ -211,6 +219,7 @@ src/
 - Empty list shows: "No readings yet. Add your first reading."
 
 ### `ReadingFormDialog`
+
 - Fields: `MeterDigitInput`, date picker, time picker
 - Date+time default to "now" for new readings; pre-populated for edits
 - Submit button disabled until all 8 digits are entered
@@ -222,6 +231,7 @@ src/
     only go up. Save anyway?") but allow saving on confirm
 
 ### `MeterDigitInput`
+
 - 4 white digit boxes followed by 4 red digit boxes, rendered to look like a
   mechanical meter readout (light text on dark, then white text on red)
 - Each box accepts one digit `[0-9]`, auto-advances focus on input,
@@ -231,6 +241,7 @@ src/
   to a single decimal on submit
 
 ### `UsageChart`
+
 - Line chart (MUI X `LineChart`) of `reading` over `takenAt` for the selected
   meter, ordered ascending in time
 - Hidden / replaced with a placeholder when fewer than 2 readings exist
@@ -248,13 +259,13 @@ src/
 
 ## Validation Rules (Summary)
 
-| Rule | Behaviour |
-| --- | --- |
-| All 8 digits required | Hard block; submit disabled |
-| `takenAt` not in future | Hard block; inline error |
-| Reading lower than previous | Soft warning; user can confirm and save |
-| Meter name required, non-empty | Hard block on meter add/rename |
-| Meter name uniqueness | Not enforced; user can name them anything |
+| Rule                           | Behaviour                                 |
+| ------------------------------ | ----------------------------------------- |
+| All 8 digits required          | Hard block; submit disabled               |
+| `takenAt` not in future        | Hard block; inline error                  |
+| Reading lower than previous    | Soft warning; user can confirm and save   |
+| Meter name required, non-empty | Hard block on meter add/rename            |
+| Meter name uniqueness          | Not enforced; user can name them anything |
 
 ## Initial / Empty States
 

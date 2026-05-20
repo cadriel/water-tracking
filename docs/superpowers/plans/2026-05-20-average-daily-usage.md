@@ -29,6 +29,7 @@ src/
 ### Task 1: Usage calculation helpers (TDD)
 
 **Files:**
+
 - Create: `src/lib/usage.test.ts`
 - Create: `src/lib/usage.ts`
 
@@ -37,9 +38,9 @@ Two pure functions:
 ```ts
 export function averageDailyUsageLitres(readings: Reading[]): number | null;
 export function averageDailyUsageLitresInLastNDays(
-    readings: Reading[],
-    days: number,
-    asOf?: Date,
+  readings: Reading[],
+  days: number,
+  asOf?: Date,
 ): number | null;
 ```
 
@@ -50,163 +51,158 @@ Algorithm (for both): filter to the window if applicable, sort ascending by `tak
 Create `src/lib/usage.test.ts`:
 
 ```ts
-import {
-    averageDailyUsageLitres,
-    averageDailyUsageLitresInLastNDays,
-} from './usage';
+import { averageDailyUsageLitres, averageDailyUsageLitresInLastNDays } from './usage';
 import type { Reading } from '../types';
 
 function makeReading(takenAt: string, reading: number, meterId = 'm1'): Reading {
-    return {
-        id: `${takenAt}-${reading}`,
-        meterId,
-        reading,
-        takenAt,
-        createdAt: takenAt,
-    };
+  return {
+    id: `${takenAt}-${reading}`,
+    meterId,
+    reading,
+    takenAt,
+    createdAt: takenAt,
+  };
 }
 
 describe('averageDailyUsageLitres', () => {
-    test('returns null for an empty array', () => {
-        expect(averageDailyUsageLitres([])).toBeNull();
-    });
+  test('returns null for an empty array', () => {
+    expect(averageDailyUsageLitres([])).toBeNull();
+  });
 
-    test('returns null for a single reading', () => {
-        expect(
-            averageDailyUsageLitres([makeReading('2026-05-01T08:00:00.000Z', 100)]),
-        ).toBeNull();
-    });
+  test('returns null for a single reading', () => {
+    expect(averageDailyUsageLitres([makeReading('2026-05-01T08:00:00.000Z', 100)])).toBeNull();
+  });
 
-    test('returns null for two readings on the same day (zero span)', () => {
-        expect(
-            averageDailyUsageLitres([
-                makeReading('2026-05-01T08:00:00.000Z', 100),
-                makeReading('2026-05-01T20:00:00.000Z', 100.5),
-            ]),
-        ).toBeNull();
-    });
+  test('returns null for two readings on the same day (zero span)', () => {
+    expect(
+      averageDailyUsageLitres([
+        makeReading('2026-05-01T08:00:00.000Z', 100),
+        makeReading('2026-05-01T20:00:00.000Z', 100.5),
+      ]),
+    ).toBeNull();
+  });
 
-    test('returns the correct L/day for two readings exactly one day apart', () => {
-        // 0.5 m³ delta over 1 day = 500 L/day
-        expect(
-            averageDailyUsageLitres([
-                makeReading('2026-05-01T08:00:00.000Z', 100),
-                makeReading('2026-05-02T08:00:00.000Z', 100.5),
-            ]),
-        ).toBeCloseTo(500, 5);
-    });
+  test('returns the correct L/day for two readings exactly one day apart', () => {
+    // 0.5 m³ delta over 1 day = 500 L/day
+    expect(
+      averageDailyUsageLitres([
+        makeReading('2026-05-01T08:00:00.000Z', 100),
+        makeReading('2026-05-02T08:00:00.000Z', 100.5),
+      ]),
+    ).toBeCloseTo(500, 5);
+  });
 
-    test('uses earliest and latest only, not consecutive pairs', () => {
-        // 0.3 m³ delta over 3 days = 100 L/day
-        // The middle reading is irrelevant to the all-time average.
-        expect(
-            averageDailyUsageLitres([
-                makeReading('2026-05-01T08:00:00.000Z', 100),
-                makeReading('2026-05-02T08:00:00.000Z', 100.25),
-                makeReading('2026-05-04T08:00:00.000Z', 100.3),
-            ]),
-        ).toBeCloseTo(100, 5);
-    });
+  test('uses earliest and latest only, not consecutive pairs', () => {
+    // 0.3 m³ delta over 3 days = 100 L/day
+    // The middle reading is irrelevant to the all-time average.
+    expect(
+      averageDailyUsageLitres([
+        makeReading('2026-05-01T08:00:00.000Z', 100),
+        makeReading('2026-05-02T08:00:00.000Z', 100.25),
+        makeReading('2026-05-04T08:00:00.000Z', 100.3),
+      ]),
+    ).toBeCloseTo(100, 5);
+  });
 
-    test('handles input that is not pre-sorted', () => {
-        // Same as the previous test but with readings in reverse order in the array.
-        expect(
-            averageDailyUsageLitres([
-                makeReading('2026-05-04T08:00:00.000Z', 100.3),
-                makeReading('2026-05-02T08:00:00.000Z', 100.25),
-                makeReading('2026-05-01T08:00:00.000Z', 100),
-            ]),
-        ).toBeCloseTo(100, 5);
-    });
+  test('handles input that is not pre-sorted', () => {
+    // Same as the previous test but with readings in reverse order in the array.
+    expect(
+      averageDailyUsageLitres([
+        makeReading('2026-05-04T08:00:00.000Z', 100.3),
+        makeReading('2026-05-02T08:00:00.000Z', 100.25),
+        makeReading('2026-05-01T08:00:00.000Z', 100),
+      ]),
+    ).toBeCloseTo(100, 5);
+  });
 
-    test('returns a negative number when readings decreased', () => {
-        // -0.2 m³ over 1 day = -200 L/day
-        expect(
-            averageDailyUsageLitres([
-                makeReading('2026-05-01T08:00:00.000Z', 100.5),
-                makeReading('2026-05-02T08:00:00.000Z', 100.3),
-            ]),
-        ).toBeCloseTo(-200, 5);
-    });
+  test('returns a negative number when readings decreased', () => {
+    // -0.2 m³ over 1 day = -200 L/day
+    expect(
+      averageDailyUsageLitres([
+        makeReading('2026-05-01T08:00:00.000Z', 100.5),
+        makeReading('2026-05-02T08:00:00.000Z', 100.3),
+      ]),
+    ).toBeCloseTo(-200, 5);
+  });
 });
 
 describe('averageDailyUsageLitresInLastNDays', () => {
-    const asOf = new Date('2026-05-31T12:00:00.000Z');
+  const asOf = new Date('2026-05-31T12:00:00.000Z');
 
-    test('returns null when no readings fall in the window', () => {
-        // Latest reading is 60 days before asOf; window is 30 days.
-        expect(
-            averageDailyUsageLitresInLastNDays(
-                [
-                    makeReading('2026-03-30T08:00:00.000Z', 100),
-                    makeReading('2026-04-01T08:00:00.000Z', 100.5),
-                ],
-                30,
-                asOf,
-            ),
-        ).toBeNull();
-    });
+  test('returns null when no readings fall in the window', () => {
+    // Latest reading is 60 days before asOf; window is 30 days.
+    expect(
+      averageDailyUsageLitresInLastNDays(
+        [
+          makeReading('2026-03-30T08:00:00.000Z', 100),
+          makeReading('2026-04-01T08:00:00.000Z', 100.5),
+        ],
+        30,
+        asOf,
+      ),
+    ).toBeNull();
+  });
 
-    test('returns null when only one reading falls in the window', () => {
-        expect(
-            averageDailyUsageLitresInLastNDays(
-                [
-                    makeReading('2026-03-30T08:00:00.000Z', 100),
-                    makeReading('2026-05-20T08:00:00.000Z', 100.5),
-                ],
-                30,
-                asOf,
-            ),
-        ).toBeNull();
-    });
+  test('returns null when only one reading falls in the window', () => {
+    expect(
+      averageDailyUsageLitresInLastNDays(
+        [
+          makeReading('2026-03-30T08:00:00.000Z', 100),
+          makeReading('2026-05-20T08:00:00.000Z', 100.5),
+        ],
+        30,
+        asOf,
+      ),
+    ).toBeNull();
+  });
 
-    test('returns L/day across the window using only in-window readings', () => {
-        // Window is 2026-05-01T12:00 .. asOf.
-        // The 2026-04-30 reading is OUT of window and must be ignored.
-        // Earliest in-window = 2026-05-11 @ 100.5; latest = 2026-05-21 @ 100.7.
-        // Delta = 0.2 m³ over 10 days = 20 L/day.
-        expect(
-            averageDailyUsageLitresInLastNDays(
-                [
-                    makeReading('2026-04-30T08:00:00.000Z', 100),
-                    makeReading('2026-05-11T12:00:00.000Z', 100.5),
-                    makeReading('2026-05-21T12:00:00.000Z', 100.7),
-                ],
-                30,
-                asOf,
-            ),
-        ).toBeCloseTo(20, 5);
-    });
+  test('returns L/day across the window using only in-window readings', () => {
+    // Window is 2026-05-01T12:00 .. asOf.
+    // The 2026-04-30 reading is OUT of window and must be ignored.
+    // Earliest in-window = 2026-05-11 @ 100.5; latest = 2026-05-21 @ 100.7.
+    // Delta = 0.2 m³ over 10 days = 20 L/day.
+    expect(
+      averageDailyUsageLitresInLastNDays(
+        [
+          makeReading('2026-04-30T08:00:00.000Z', 100),
+          makeReading('2026-05-11T12:00:00.000Z', 100.5),
+          makeReading('2026-05-21T12:00:00.000Z', 100.7),
+        ],
+        30,
+        asOf,
+      ),
+    ).toBeCloseTo(20, 5);
+  });
 
-    test('a reading exactly at the window boundary counts as in-window', () => {
-        // asOf - 30 days = 2026-05-01T12:00:00.000Z.
-        // A reading at exactly that moment counts as in-window.
-        expect(
-            averageDailyUsageLitresInLastNDays(
-                [
-                    makeReading('2026-05-01T12:00:00.000Z', 100),
-                    makeReading('2026-05-31T12:00:00.000Z', 100.3),
-                ],
-                30,
-                asOf,
-            ),
-        ).toBeCloseTo(10, 5);
-    });
+  test('a reading exactly at the window boundary counts as in-window', () => {
+    // asOf - 30 days = 2026-05-01T12:00:00.000Z.
+    // A reading at exactly that moment counts as in-window.
+    expect(
+      averageDailyUsageLitresInLastNDays(
+        [
+          makeReading('2026-05-01T12:00:00.000Z', 100),
+          makeReading('2026-05-31T12:00:00.000Z', 100.3),
+        ],
+        30,
+        asOf,
+      ),
+    ).toBeCloseTo(10, 5);
+  });
 
-    test('defaults asOf to "now" when not provided', () => {
-        // Two readings, one taken right before "now" and one a day before that.
-        // We can't pin "now" exactly, so just confirm we get a non-null number
-        // back when both readings are very recent.
-        const now = Date.now();
-        const a = new Date(now - 25 * 3_600_000).toISOString(); // 25h ago
-        const b = new Date(now - 60_000).toISOString(); // 1 min ago
-        const result = averageDailyUsageLitresInLastNDays(
-            [makeReading(a, 100), makeReading(b, 100.1)],
-            30,
-        );
-        expect(result).not.toBeNull();
-        expect(result!).toBeGreaterThan(0);
-    });
+  test('defaults asOf to "now" when not provided', () => {
+    // Two readings, one taken right before "now" and one a day before that.
+    // We can't pin "now" exactly, so just confirm we get a non-null number
+    // back when both readings are very recent.
+    const now = Date.now();
+    const a = new Date(now - 25 * 3_600_000).toISOString(); // 25h ago
+    const b = new Date(now - 60_000).toISOString(); // 1 min ago
+    const result = averageDailyUsageLitresInLastNDays(
+      [makeReading(a, 100), makeReading(b, 100.1)],
+      30,
+    );
+    expect(result).not.toBeNull();
+    expect(result!).toBeGreaterThan(0);
+  });
 });
 ```
 
@@ -226,35 +222,32 @@ import type { Reading } from '../types';
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 function averageBetween(earliest: Reading, latest: Reading): number | null {
-    const daysBetween =
-        (new Date(latest.takenAt).getTime() - new Date(earliest.takenAt).getTime()) /
-        MS_PER_DAY;
-    if (daysBetween <= 0) return null;
-    return ((latest.reading - earliest.reading) * 1000) / daysBetween;
+  const daysBetween =
+    (new Date(latest.takenAt).getTime() - new Date(earliest.takenAt).getTime()) / MS_PER_DAY;
+  if (daysBetween <= 0) return null;
+  return ((latest.reading - earliest.reading) * 1000) / daysBetween;
 }
 
 function sortAscending(readings: Reading[]): Reading[] {
-    return readings.slice().sort((a, b) => (a.takenAt < b.takenAt ? -1 : 1));
+  return readings.slice().sort((a, b) => (a.takenAt < b.takenAt ? -1 : 1));
 }
 
 export function averageDailyUsageLitres(readings: Reading[]): number | null {
-    if (readings.length < 2) return null;
-    const sorted = sortAscending(readings);
-    return averageBetween(sorted[0], sorted[sorted.length - 1]);
+  if (readings.length < 2) return null;
+  const sorted = sortAscending(readings);
+  return averageBetween(sorted[0], sorted[sorted.length - 1]);
 }
 
 export function averageDailyUsageLitresInLastNDays(
-    readings: Reading[],
-    days: number,
-    asOf: Date = new Date(),
+  readings: Reading[],
+  days: number,
+  asOf: Date = new Date(),
 ): number | null {
-    const windowStart = asOf.getTime() - days * MS_PER_DAY;
-    const inWindow = readings.filter(
-        r => new Date(r.takenAt).getTime() >= windowStart,
-    );
-    if (inWindow.length < 2) return null;
-    const sorted = sortAscending(inWindow);
-    return averageBetween(sorted[0], sorted[sorted.length - 1]);
+  const windowStart = asOf.getTime() - days * MS_PER_DAY;
+  const inWindow = readings.filter(r => new Date(r.takenAt).getTime() >= windowStart);
+  if (inWindow.length < 2) return null;
+  const sorted = sortAscending(inWindow);
+  return averageBetween(sorted[0], sorted[sorted.length - 1]);
 }
 ```
 
@@ -286,6 +279,7 @@ git commit -m "Add average daily usage calculation helpers"
 ### Task 2: `UsageStats` component
 
 **Files:**
+
 - Create: `src/components/UsageStats.tsx`
 
 The component renders a Paper card with two stat columns ("All time" and "Last 30 days") showing L/day values. Returns `null` when the meter has fewer than 2 readings. Each column shows the value (e.g. `245.3 L/day`) or an em-dash with a small caption (`Need more readings`) when the calculation returns `null`.
@@ -297,79 +291,73 @@ import { useMemo } from 'react';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import {
-    averageDailyUsageLitres,
-    averageDailyUsageLitresInLastNDays,
-} from '../lib/usage';
+import { averageDailyUsageLitres, averageDailyUsageLitresInLastNDays } from '../lib/usage';
 import { useWaterTrackingReadings } from '../store/useWaterTrackingStore';
 
 interface UsageStatsProps {
-    meterId: string;
+  meterId: string;
 }
 
 function formatLitresPerDay(value: number): string {
-    return `${value.toFixed(1)} L/day`;
+  return `${value.toFixed(1)} L/day`;
 }
 
 interface StatColumnProps {
-    label: string;
-    value: number | null;
+  label: string;
+  value: number | null;
 }
 
 function StatColumn({ label, value }: StatColumnProps) {
-    return (
-        <Stack spacing={0.5}>
-            <Typography variant="body2" color="text.secondary">
-                {label}
-            </Typography>
-            {value === null ? (
-                <>
-                    <Typography variant="h5" component="div">
-                        —
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                        Need more readings
-                    </Typography>
-                </>
-            ) : (
-                <Typography variant="h5" component="div" sx={{ fontFamily: 'monospace' }}>
-                    {formatLitresPerDay(value)}
-                </Typography>
-            )}
-        </Stack>
-    );
+  return (
+    <Stack spacing={0.5}>
+      <Typography variant="body2" color="text.secondary">
+        {label}
+      </Typography>
+      {value === null ? (
+        <>
+          <Typography variant="h5" component="div">
+            —
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            Need more readings
+          </Typography>
+        </>
+      ) : (
+        <Typography variant="h5" component="div" sx={{ fontFamily: 'monospace' }}>
+          {formatLitresPerDay(value)}
+        </Typography>
+      )}
+    </Stack>
+  );
 }
 
 export function UsageStats({ meterId }: UsageStatsProps) {
-    const readings = useWaterTrackingReadings();
+  const readings = useWaterTrackingReadings();
 
-    const meterReadings = useMemo(
-        () => readings.filter(r => r.meterId === meterId),
-        [readings, meterId],
-    );
+  const meterReadings = useMemo(
+    () => readings.filter(r => r.meterId === meterId),
+    [readings, meterId],
+  );
 
-    const allTime = useMemo(
-        () => averageDailyUsageLitres(meterReadings),
-        [meterReadings],
-    );
-    const last30Days = useMemo(
-        () => averageDailyUsageLitresInLastNDays(meterReadings, 30),
-        [meterReadings],
-    );
+  const allTime = useMemo(() => averageDailyUsageLitres(meterReadings), [meterReadings]);
+  const last30Days = useMemo(
+    () => averageDailyUsageLitresInLastNDays(meterReadings, 30),
+    [meterReadings],
+  );
 
-    if (meterReadings.length < 2) return null;
+  if (meterReadings.length < 2) return null;
 
-    return (
-        <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
-            <Typography variant="overline" color="text.secondary">
-                Average daily usage
-            </Typography>
-            <Stack direction="row" spacing={4} sx={{ mt: 1 }}>
-                <StatColumn label="All time" value={allTime} />
-                <StatColumn label="Last 30 days" value={last30Days} />
-            </Stack>
-        </Paper>
-    );
+  return (
+    <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
+      <Typography variant="overline" color="text.secondary">
+        Average daily usage
+      </Typography>
+      <Stack direction="row" spacing={4} sx={{ mt: 1 }}>
+        <StatColumn label="All time" value={allTime} />
+        <StatColumn label="Last 30 days" value={last30Days} />
+      </Stack>
+    </Paper>
+  );
 }
 ```
 
@@ -393,6 +381,7 @@ git commit -m "Add UsageStats component"
 ### Task 3: Wire `UsageStats` into `App.tsx` + manual smoke test
 
 **Files:**
+
 - Modify: `src/App.tsx`
 
 Render `<UsageStats meterId={meterToShow} />` between the `<AppHeader />` and `<ReadingList />`. The card already handles the "fewer than 2 readings" case internally by returning `null`, so no conditional logic is needed at the App level.
@@ -411,34 +400,34 @@ import { MeterManagerDialog } from './components/MeterManagerDialog';
 import { ReadingList } from './components/ReadingList';
 import { UsageChart } from './components/UsageChart';
 import {
-    useWaterTrackingMeters,
-    useWaterTrackingSelectedMeterId,
+  useWaterTrackingMeters,
+  useWaterTrackingSelectedMeterId,
 } from './store/useWaterTrackingStore';
 
 function App() {
-    const meters = useWaterTrackingMeters();
-    const selectedMeterId = useWaterTrackingSelectedMeterId();
-    const [managerOpen, setManagerOpen] = useState(false);
+  const meters = useWaterTrackingMeters();
+  const selectedMeterId = useWaterTrackingSelectedMeterId();
+  const [managerOpen, setManagerOpen] = useState(false);
 
-    const noMeters = meters.length === 0;
-    const meterToShow = selectedMeterId ?? meters[0]?.id ?? null;
+  const noMeters = meters.length === 0;
+  const meterToShow = selectedMeterId ?? meters[0]?.id ?? null;
 
-    return (
-        <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-            <AppHeader onManageMeters={() => setManagerOpen(true)} />
-            <Container maxWidth="md" sx={{ py: 4 }}>
-                {noMeters ? (
-                    <EmptyState onCreateMeter={() => setManagerOpen(true)} />
-                ) : meterToShow ? (
-                    <>
-                        <ReadingList meterId={meterToShow} />
-                        <UsageChart meterId={meterToShow} />
-                    </>
-                ) : null}
-            </Container>
-            <MeterManagerDialog open={managerOpen} onClose={() => setManagerOpen(false)} />
-        </Box>
-    );
+  return (
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+      <AppHeader onManageMeters={() => setManagerOpen(true)} />
+      <Container maxWidth="md" sx={{ py: 4 }}>
+        {noMeters ? (
+          <EmptyState onCreateMeter={() => setManagerOpen(true)} />
+        ) : meterToShow ? (
+          <>
+            <ReadingList meterId={meterToShow} />
+            <UsageChart meterId={meterToShow} />
+          </>
+        ) : null}
+      </Container>
+      <MeterManagerDialog open={managerOpen} onClose={() => setManagerOpen(false)} />
+    </Box>
+  );
 }
 
 export default App;
@@ -457,35 +446,35 @@ import { ReadingList } from './components/ReadingList';
 import { UsageChart } from './components/UsageChart';
 import { UsageStats } from './components/UsageStats';
 import {
-    useWaterTrackingMeters,
-    useWaterTrackingSelectedMeterId,
+  useWaterTrackingMeters,
+  useWaterTrackingSelectedMeterId,
 } from './store/useWaterTrackingStore';
 
 function App() {
-    const meters = useWaterTrackingMeters();
-    const selectedMeterId = useWaterTrackingSelectedMeterId();
-    const [managerOpen, setManagerOpen] = useState(false);
+  const meters = useWaterTrackingMeters();
+  const selectedMeterId = useWaterTrackingSelectedMeterId();
+  const [managerOpen, setManagerOpen] = useState(false);
 
-    const noMeters = meters.length === 0;
-    const meterToShow = selectedMeterId ?? meters[0]?.id ?? null;
+  const noMeters = meters.length === 0;
+  const meterToShow = selectedMeterId ?? meters[0]?.id ?? null;
 
-    return (
-        <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-            <AppHeader onManageMeters={() => setManagerOpen(true)} />
-            <Container maxWidth="md" sx={{ py: 4 }}>
-                {noMeters ? (
-                    <EmptyState onCreateMeter={() => setManagerOpen(true)} />
-                ) : meterToShow ? (
-                    <>
-                        <UsageStats meterId={meterToShow} />
-                        <ReadingList meterId={meterToShow} />
-                        <UsageChart meterId={meterToShow} />
-                    </>
-                ) : null}
-            </Container>
-            <MeterManagerDialog open={managerOpen} onClose={() => setManagerOpen(false)} />
-        </Box>
-    );
+  return (
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+      <AppHeader onManageMeters={() => setManagerOpen(true)} />
+      <Container maxWidth="md" sx={{ py: 4 }}>
+        {noMeters ? (
+          <EmptyState onCreateMeter={() => setManagerOpen(true)} />
+        ) : meterToShow ? (
+          <>
+            <UsageStats meterId={meterToShow} />
+            <ReadingList meterId={meterToShow} />
+            <UsageChart meterId={meterToShow} />
+          </>
+        ) : null}
+      </Container>
+      <MeterManagerDialog open={managerOpen} onClose={() => setManagerOpen(false)} />
+    </Box>
+  );
 }
 
 export default App;
@@ -536,6 +525,7 @@ git commit -m "Wire UsageStats into App layout"
 ## Self-Review
 
 **Spec coverage:**
+
 - `src/lib/usage.ts` with both functions → Task 1
 - Unit tests covering empty / 1 reading / same-day / multi-day / decreasing / unsorted / window edge cases → Task 1 (test code shown in full)
 - `src/components/UsageStats.tsx` with `StatColumn` helper, `formatLitresPerDay`, the "Need more readings" fallback, and the "< 2 readings → null" early return → Task 2

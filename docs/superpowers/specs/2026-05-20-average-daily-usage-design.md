@@ -18,6 +18,7 @@ to do mental math on the reading list.
 ## Scope
 
 **In scope**
+
 - Calculation helpers for both window types (`src/lib/usage.ts`)
 - Unit tests covering the math and edge cases
 - A `UsageStats` component that displays the two values
@@ -25,6 +26,7 @@ to do mental math on the reading list.
   `ReadingList` when a meter is selected
 
 **Out of scope**
+
 - Cost / tariff calculations
 - Comparison to "typical household" benchmarks
 - Per-week / per-month / custom ranges (we'll add a range selector later if
@@ -66,9 +68,9 @@ export function averageDailyUsageLitres(readings: Reading[]): number | null;
  * span is zero days.
  */
 export function averageDailyUsageLitresInLastNDays(
-    readings: Reading[],
-    days: number,
-    asOf?: Date,
+  readings: Reading[],
+  days: number,
+  asOf?: Date,
 ): number | null;
 ```
 
@@ -92,14 +94,14 @@ and dividing by days produces L/day.
 
 ### Edge cases
 
-| Input | Returned |
-| --- | --- |
-| 0 readings | `null` |
-| 1 reading | `null` |
-| ≥ 2 readings all on the same day | `null` |
-| ≥ 2 readings spanning ≥ 1 day | the L/day value |
-| Last 30 days, no readings in window | `null` |
-| Last 30 days, 1 reading in window | `null` |
+| Input                                         | Returned                            |
+| --------------------------------------------- | ----------------------------------- |
+| 0 readings                                    | `null`                              |
+| 1 reading                                     | `null`                              |
+| ≥ 2 readings all on the same day              | `null`                              |
+| ≥ 2 readings spanning ≥ 1 day                 | the L/day value                     |
+| Last 30 days, no readings in window           | `null`                              |
+| Last 30 days, 1 reading in window             | `null`                              |
 | Reading decreased between earliest and latest | a negative number (displayed as-is) |
 
 The "reading decreased" case is rare — the `ReadingFormDialog` already warns
@@ -113,38 +115,35 @@ underlying data.
 
 ```tsx
 interface UsageStatsProps {
-    meterId: string;
+  meterId: string;
 }
 
 export function UsageStats({ meterId }: UsageStatsProps) {
-    const readings = useWaterTrackingReadings();
-    const meterReadings = useMemo(
-        () => readings.filter(r => r.meterId === meterId),
-        [readings, meterId],
-    );
+  const readings = useWaterTrackingReadings();
+  const meterReadings = useMemo(
+    () => readings.filter(r => r.meterId === meterId),
+    [readings, meterId],
+  );
 
-    const allTime = useMemo(
-        () => averageDailyUsageLitres(meterReadings),
-        [meterReadings],
-    );
-    const last30Days = useMemo(
-        () => averageDailyUsageLitresInLastNDays(meterReadings, 30),
-        [meterReadings],
-    );
+  const allTime = useMemo(() => averageDailyUsageLitres(meterReadings), [meterReadings]);
+  const last30Days = useMemo(
+    () => averageDailyUsageLitresInLastNDays(meterReadings, 30),
+    [meterReadings],
+  );
 
-    if (meterReadings.length < 2) return null;
+  if (meterReadings.length < 2) return null;
 
-    return (
-        <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
-            <Typography variant="overline" color="text.secondary">
-                Average daily usage
-            </Typography>
-            <Stack direction="row" spacing={4} sx={{ mt: 1 }}>
-                <StatColumn label="All time" value={allTime} />
-                <StatColumn label="Last 30 days" value={last30Days} />
-            </Stack>
-        </Paper>
-    );
+  return (
+    <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
+      <Typography variant="overline" color="text.secondary">
+        Average daily usage
+      </Typography>
+      <Stack direction="row" spacing={4} sx={{ mt: 1 }}>
+        <StatColumn label="All time" value={allTime} />
+        <StatColumn label="Last 30 days" value={last30Days} />
+      </Stack>
+    </Paper>
+  );
 }
 ```
 
@@ -166,7 +165,7 @@ handles this:
 
 ```ts
 function formatLitresPerDay(value: number): string {
-    return `${value.toFixed(1)} L/day`;
+  return `${value.toFixed(1)} L/day`;
 }
 ```
 
