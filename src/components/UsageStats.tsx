@@ -2,7 +2,11 @@ import { useMemo } from 'react';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { averageDailyUsageLitres, averageDailyUsageLitresInLastNDays } from '../lib/usage';
+import {
+  averageDailyUsageLitres,
+  averageDailyUsageLitresInLastNDays,
+  averageBetweenLastUtilityReadings,
+} from '../lib/usage';
 import { useWaterTrackingReadings } from '../store/useWaterTrackingStore';
 import { Box } from '@mui/material';
 
@@ -17,9 +21,10 @@ function formatLitresPerDay(value: number): string {
 interface StatColumnProps {
   label: string;
   value: number | null;
+  missingCaption?: string;
 }
 
-function StatColumn({ label, value }: StatColumnProps) {
+function StatColumn({ label, value, missingCaption = 'Need more readings' }: StatColumnProps) {
   return (
     <Stack spacing={0.5}>
       <Typography variant="body2" color="text.secondary">
@@ -31,7 +36,7 @@ function StatColumn({ label, value }: StatColumnProps) {
             —
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            Need more readings
+            {missingCaption}
           </Typography>
         </>
       ) : (
@@ -56,6 +61,10 @@ export function UsageStats({ meterId }: UsageStatsProps) {
     () => averageDailyUsageLitresInLastNDays(meterReadings, 30),
     [meterReadings],
   );
+  const lastBillingCycle = useMemo(
+    () => averageBetweenLastUtilityReadings(meterReadings),
+    [meterReadings],
+  );
 
   if (meterReadings.length < 2) return null;
 
@@ -69,6 +78,11 @@ export function UsageStats({ meterId }: UsageStatsProps) {
         <Stack direction="row" spacing={4} sx={{ mt: 1 }}>
           <StatColumn label="All time" value={allTime} />
           <StatColumn label="Last 30 days" value={last30Days} />
+          <StatColumn
+            label="Last billing cycle"
+            value={lastBillingCycle}
+            missingCaption="Need 2 utility readings"
+          />
         </Stack>
       </Paper>
     </Box>
