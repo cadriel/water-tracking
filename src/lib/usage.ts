@@ -30,3 +30,12 @@ export function averageDailyUsageLitresInLastNDays(
   const sorted = sortAscending(inWindow);
   return averageBetween(sorted[0], sorted[sorted.length - 1]);
 }
+
+export function averageBetweenLastUtilityReadings(readings: Reading[]): number | null {
+  const utilities = readings.filter(r => r.source === 'utility');
+  if (utilities.length < 2) return null;
+  const sorted = sortAscending(utilities);
+  const prev = sorted[sorted.length - 2];
+  const latest = sorted[sorted.length - 1];
+  return averageBetween(prev, latest);
+}

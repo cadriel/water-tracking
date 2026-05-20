@@ -1,4 +1,8 @@
-import { averageDailyUsageLitres, averageDailyUsageLitresInLastNDays } from './usage';
+import {
+  averageDailyUsageLitres,
+  averageDailyUsageLitresInLastNDays,
+  averageBetweenLastUtilityReadings,
+} from './usage';
 import type { Reading } from '../types';
 
 function makeReading(
@@ -144,5 +148,77 @@ describe('averageDailyUsageLitresInLastNDays', () => {
     );
     expect(result).not.toBeNull();
     expect(result!).toBeGreaterThan(0);
+  });
+});
+
+describe('averageBetweenLastUtilityReadings', () => {
+  test('returns null when there are no utility readings', () => {
+    expect(
+      averageBetweenLastUtilityReadings([
+        makeReading('2026-05-01T08:00:00.000Z', 100),
+        makeReading('2026-05-10T08:00:00.000Z', 100.5),
+      ]),
+    ).toBeNull();
+  });
+
+  test('returns null when there is only one utility reading', () => {
+    expect(
+      averageBetweenLastUtilityReadings([
+        makeReading('2026-05-01T08:00:00.000Z', 100),
+        makeReading('2026-05-10T08:00:00.000Z', 100.5, 'm1', 'utility'),
+      ]),
+    ).toBeNull();
+  });
+
+  test('returns null when the two utility readings are on the same day', () => {
+    expect(
+      averageBetweenLastUtilityReadings([
+        makeReading('2026-05-01T08:00:00.000Z', 100, 'm1', 'utility'),
+        makeReading('2026-05-01T20:00:00.000Z', 100.05, 'm1', 'utility'),
+      ]),
+    ).toBeNull();
+  });
+
+  test('returns the correct L/day for two utility readings 5 days apart', () => {
+    // 0.5 m³ over 5 days = 100 L/day
+    expect(
+      averageBetweenLastUtilityReadings([
+        makeReading('2026-05-01T08:00:00.000Z', 100, 'm1', 'utility'),
+        makeReading('2026-05-06T08:00:00.000Z', 100.5, 'm1', 'utility'),
+      ]),
+    ).toBeCloseTo(100, 5);
+  });
+
+  test('uses only the two most recent utility readings', () => {
+    // Three utility readings; only the last two should determine the value.
+    // Last two: 2026-05-10 @ 101.0 and 2026-05-15 @ 101.25 → 0.25 m³ over 5 days = 50 L/day.
+    expect(
+      averageBetweenLastUtilityReadings([
+        makeReading('2026-05-01T08:00:00.000Z', 100, 'm1', 'utility'),
+        makeReading('2026-05-10T08:00:00.000Z', 101.0, 'm1', 'utility'),
+        makeReading('2026-05-15T08:00:00.000Z', 101.25, 'm1', 'utility'),
+      ]),
+    ).toBeCloseTo(50, 5);
+  });
+
+  test('ignores homeowner readings between utility readings', () => {
+    // Two utility readings 10 days apart; homeowner readings in between are ignored.
+    expect(
+      averageBetweenLastUtilityReadings([
+        makeReading('2026-05-01T08:00:00.000Z', 100, 'm1', 'utility'),
+        makeReading('2026-05-05T08:00:00.000Z', 100.4), // homeowner, ignored
+        makeReading('2026-05-08T08:00:00.000Z', 100.7), // homeowner, ignored
+        makeReading('2026-05-11T08:00:00.000Z', 101.0, 'm1', 'utility'),
+      ]),
+    ).toBeCloseTo(100, 5); // 1.0 m³ over 10 days = 100 L/day
+  });
+
+  test('handles input that is not pre-sorted', () => {
+    expect(
+      averageBetweenLastUtilityReadings([
+        makeReading('2026-05-06T08:00:00.000Z', 100.5, 'm1', 'utility'),
+        makeReading('2026-05-01T08:00:00.000Z', 100, 'm1', 'utility'),
+      ]),
+    ).toBeCloseTo(100, 5);
   });
 });
