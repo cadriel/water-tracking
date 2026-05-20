@@ -291,7 +291,8 @@ src/
   dark text, and the red-digit block stays red in both modes (matching a
   physical meter's appearance)
 
-## Open Decisions Deferred to Implementation
+## Other Decisions
 
-- ID generation: `crypto.randomUUID()` (browser-native, no dep)
-- Date picker library: MUI X Date Pickers (free community version)
+- **IDs:** `crypto.randomUUID()` (browser-native, no extra dependency)
+- **Date / time pickers:** MUI X Date Pickers (free community version) with
+  a date-fns adapter
