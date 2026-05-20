@@ -5,7 +5,68 @@ import Box from '@mui/material/Box';
 import { useTheme } from '@mui/material/styles';
 import { LineChart } from '@mui/x-charts/LineChart';
 import type { MarkElementProps } from '@mui/x-charts/LineChart';
+import { ChartsTooltipContainer, useAxesTooltip } from '@mui/x-charts/ChartsTooltip';
+import { format } from 'date-fns';
 import { useWaterTrackingReadings } from '../store/useWaterTrackingStore';
+
+interface AxisTooltipContentProps {
+  readings: { takenAt: string; reading: number; source: string }[];
+}
+
+function AxisTooltipContent({ readings }: AxisTooltipContentProps) {
+  const theme = useTheme();
+  const tooltipData = useAxesTooltip();
+  if (!tooltipData || tooltipData.length === 0) return null;
+
+  const { axisValue, dataIndex } = tooltipData[0];
+  const reading = readings[dataIndex];
+  if (!reading) return null;
+
+  const date = axisValue instanceof Date ? axisValue : new Date(reading.takenAt);
+  const formattedDate = format(date, 'd MMM yyyy, HH:mm');
+  const formattedValue = `${reading.reading.toFixed(4)} m³`;
+  const dotColor =
+    reading.source === 'utility' ? theme.palette.secondary.main : theme.palette.primary.main;
+  const sourceLabel = reading.source === 'utility' ? 'Utility' : 'Homeowner';
+
+  return (
+    <Paper
+      elevation={3}
+      sx={{ px: 1.5, py: 1, display: 'flex', flexDirection: 'column', gap: 0.5 }}
+    >
+      <Typography variant="caption" color="text.secondary">
+        {formattedDate}
+      </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Box
+          sx={{
+            width: 10,
+            height: 10,
+            borderRadius: '50%',
+            backgroundColor: dotColor,
+            flexShrink: 0,
+          }}
+        />
+        <Typography variant="body2">
+          {formattedValue}
+          <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 0.5 }}>
+            ({sourceLabel})
+          </Typography>
+        </Typography>
+      </Box>
+    </Paper>
+  );
+}
+
+function makeAxisTooltip(readings: { takenAt: string; reading: number; source: string }[]) {
+  return function AxisTooltip() {
+    return (
+      <ChartsTooltipContainer trigger="axis">
+        <AxisTooltipContent readings={readings} />
+      </ChartsTooltipContainer>
+    );
+  };
+}
 
 interface UsageChartProps {
   meterId: string;
@@ -25,6 +86,8 @@ export function UsageChart({ meterId }: UsageChartProps) {
       .slice()
       .sort((a, b) => (a.takenAt < b.takenAt ? -1 : 1));
   }, [readings, meterId]);
+
+  const AxisTooltip = useMemo(() => makeAxisTooltip(last30Days), [last30Days]);
 
   if (last30Days.length < 2) {
     return (
@@ -78,7 +141,7 @@ export function UsageChart({ meterId }: UsageChartProps) {
               valueFormatter: value => (value === null ? '' : `${value.toFixed(4)} m³`),
             },
           ]}
-          slots={{ mark: ColorCodedMark }}
+          slots={{ mark: ColorCodedMark, tooltip: AxisTooltip }}
         />
       </Paper>
     </Box>
