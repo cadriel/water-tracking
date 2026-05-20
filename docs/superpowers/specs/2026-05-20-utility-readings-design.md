@@ -21,6 +21,7 @@ itself the billing-date marker.
 ## Scope
 
 **In scope**
+
 - Add `source: 'homeowner' | 'utility'` to the `Reading` type with a
   schema migration via `persist`'s `version` bump
 - Source selector in `ReadingFormDialog` (defaults to homeowner)
@@ -31,6 +32,7 @@ itself the billing-date marker.
   marks (theme primary for homeowner, theme secondary for utility)
 
 **Out of scope**
+
 - Counting / total stats for utility readings
 - Per-meter default source
 - A timeline / calendar-like view of utility readings
@@ -41,12 +43,12 @@ itself the billing-date marker.
 
 ```ts
 export interface Reading {
-    id: string;
-    meterId: string;
-    reading: number;
-    takenAt: string;
-    createdAt: string;
-    source: 'homeowner' | 'utility'; // NEW
+  id: string;
+  meterId: string;
+  reading: number;
+  takenAt: string;
+  createdAt: string;
+  source: 'homeowner' | 'utility'; // NEW
 }
 ```
 
@@ -105,10 +107,10 @@ visual noise).
 
 ```tsx
 <TableCell>
-    {formatReading(reading.reading)}
-    {reading.source === 'utility' && (
-        <Chip size="small" label="Utility" color="secondary" sx={{ ml: 1 }} />
-    )}
+  {formatReading(reading.reading)}
+  {reading.source === 'utility' && (
+    <Chip size="small" label="Utility" color="secondary" sx={{ ml: 1 }} />
+  )}
 </TableCell>
 ```
 
@@ -145,9 +147,7 @@ determine the source. The lookup array is passed via component closure.
 
 ```ts
 /** Returns L/day between the two most recent utility readings, or null. */
-export function averageBetweenLastUtilityReadings(
-    readings: Reading[],
-): number | null;
+export function averageBetweenLastUtilityReadings(readings: Reading[]): number | null;
 ```
 
 Steps:
@@ -162,13 +162,13 @@ Steps:
 
 ### Edge cases
 
-| Input | Returned |
-| --- | --- |
-| 0 utility readings | `null` |
-| 1 utility reading | `null` |
-| 2 utility readings on the same day | `null` (span < 1 day) |
-| 2 utility readings ≥ 1 day apart | the L/day value |
-| 3+ utility readings | uses only the most recent two |
+| Input                              | Returned                      |
+| ---------------------------------- | ----------------------------- |
+| 0 utility readings                 | `null`                        |
+| 1 utility reading                  | `null`                        |
+| 2 utility readings on the same day | `null` (span < 1 day)         |
+| 2 utility readings ≥ 1 day apart   | the L/day value               |
+| 3+ utility readings                | uses only the most recent two |
 
 This matches the existing helper conventions: invisible-correctness via
 input data, not silently returning misleading numbers.

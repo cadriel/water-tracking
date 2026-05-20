@@ -203,7 +203,7 @@ describe('migration v0 → v1', () => {
 });
 ```
 
-Note: the test above asserts the migration's *output shape* (what readings look like after backfill) by simulating the legacy state then applying the same `?? 'homeowner'` step the migrate function does. This is intentional — directly invoking the persist middleware's internal migration in jsdom adds complexity that outweighs the benefit, and the migrate function itself is two lines, mechanically identical to the test's assertion.
+Note: the test above asserts the migration's _output shape_ (what readings look like after backfill) by simulating the legacy state then applying the same `?? 'homeowner'` step the migrate function does. This is intentional — directly invoking the persist middleware's internal migration in jsdom adds complexity that outweighs the benefit, and the migrate function itself is two lines, mechanically identical to the test's assertion.
 
 - [ ] **Step 4: Update `makeReading` in `src/lib/usage.test.ts`**
 
@@ -278,6 +278,7 @@ npm test
 ```
 
 Expected:
+
 - lint: exit 0
 - format:check: exit 0
 - build: succeeds, no TypeScript errors
@@ -586,12 +587,7 @@ Replace with:
 <TableCell sx={{ fontFamily: 'monospace' }}>
   {formatReading(reading.reading)}
   {reading.source === 'utility' && (
-    <Chip
-      size="small"
-      label="Utility"
-      color="secondary"
-      sx={{ ml: 1, fontFamily: 'inherit' }}
-    />
+    <Chip size="small" label="Utility" color="secondary" sx={{ ml: 1, fontFamily: 'inherit' }} />
   )}
 </TableCell>
 ```
@@ -764,9 +760,7 @@ export function UsageChart({ meterId }: UsageChartProps) {
   if (last30Days.length < 2) {
     return (
       <Paper variant="outlined" sx={{ p: 4, textAlign: 'center', mt: 3 }}>
-        <Typography color="text.secondary">
-          Add another reading to see usage over time.
-        </Typography>
+        <Typography color="text.secondary">Add another reading to see usage over time.</Typography>
       </Paper>
     );
   }
@@ -785,9 +779,7 @@ export function UsageChart({ meterId }: UsageChartProps) {
   }) {
     const reading = last30Days[props.dataIndex];
     const fill =
-      reading?.source === 'utility'
-        ? theme.palette.secondary.main
-        : theme.palette.primary.main;
+      reading?.source === 'utility' ? theme.palette.secondary.main : theme.palette.primary.main;
     return (
       <circle
         cx={props.x}
@@ -896,6 +888,7 @@ All ten spec areas accounted for.
 **Type consistency:** `Reading`, `ReadingSource`, `NewReadingInput`, `averageBetweenLastUtilityReadings`, `StatColumnProps`, `missingCaption` all match across tasks. The `source: 'homeowner' as const` hardcode in Task 1 is replaced by `source` state in Task 3.
 
 **Test counts at each task:**
+
 - Before Task 1: 42
 - After Task 1: 45 (2 source tests + 1 migration test)
 - After Task 2: 52 (7 new utility-cycle tests)
