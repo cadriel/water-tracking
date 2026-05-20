@@ -79,3 +79,76 @@ describe('meter actions', () => {
         expect(result.current).toBe(id);
     });
 });
+
+describe('reading actions', () => {
+    function seedMeter(): string {
+        return useWaterTrackingStore.getState().actions.addMeter('Main');
+    }
+
+    test('addReading appends a reading with an id and createdAt', () => {
+        const meterId = seedMeter();
+        useWaterTrackingStore.getState().actions.addReading({
+            meterId,
+            reading: 1234.5678,
+            takenAt: '2026-05-20T08:00:00.000Z',
+        });
+        const readings = useWaterTrackingStore.getState().readings;
+        expect(readings).toHaveLength(1);
+        expect(readings[0]).toMatchObject({
+            meterId,
+            reading: 1234.5678,
+            takenAt: '2026-05-20T08:00:00.000Z',
+        });
+        expect(readings[0].id).toBeTruthy();
+        expect(readings[0].createdAt).toMatch(/\d{4}-\d{2}-\d{2}T/);
+    });
+
+    test('updateReading patches the given fields and leaves others alone', () => {
+        const meterId = seedMeter();
+        useWaterTrackingStore.getState().actions.addReading({
+            meterId,
+            reading: 1234.5678,
+            takenAt: '2026-05-20T08:00:00.000Z',
+        });
+        const readingId = useWaterTrackingStore.getState().readings[0].id;
+        useWaterTrackingStore.getState().actions.updateReading(readingId, {
+            reading: 1235.0001,
+        });
+        const updated = useWaterTrackingStore.getState().readings[0];
+        expect(updated.reading).toBe(1235.0001);
+        expect(updated.takenAt).toBe('2026-05-20T08:00:00.000Z');
+    });
+
+    test('deleteReading removes the given reading', () => {
+        const meterId = seedMeter();
+        useWaterTrackingStore.getState().actions.addReading({
+            meterId,
+            reading: 1.0,
+            takenAt: '2026-05-20T08:00:00.000Z',
+        });
+        const readingId = useWaterTrackingStore.getState().readings[0].id;
+        useWaterTrackingStore.getState().actions.deleteReading(readingId);
+        expect(useWaterTrackingStore.getState().readings).toHaveLength(0);
+    });
+
+    test('deleteMeter cascades and removes the meter\'s readings', () => {
+        const meterId = seedMeter();
+        const otherId = useWaterTrackingStore
+            .getState()
+            .actions.addMeter('Irrigation');
+        useWaterTrackingStore.getState().actions.addReading({
+            meterId,
+            reading: 1.0,
+            takenAt: '2026-05-20T08:00:00.000Z',
+        });
+        useWaterTrackingStore.getState().actions.addReading({
+            meterId: otherId,
+            reading: 2.0,
+            takenAt: '2026-05-20T08:00:00.000Z',
+        });
+        useWaterTrackingStore.getState().actions.deleteMeter(meterId);
+        const remaining = useWaterTrackingStore.getState().readings;
+        expect(remaining).toHaveLength(1);
+        expect(remaining[0].meterId).toBe(otherId);
+    });
+});

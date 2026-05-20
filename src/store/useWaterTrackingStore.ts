@@ -73,16 +73,27 @@ export const useWaterTrackingStore = create<WaterTrackingState & WaterTrackingAc
                         });
                     },
 
-                    addReading: (_input: NewReadingInput) => {
-                        // Implemented in Task 7
+                    addReading: (input: NewReadingInput) => {
+                        set(state => {
+                            state.readings.push({
+                                id: crypto.randomUUID(),
+                                createdAt: new Date().toISOString(),
+                                ...input,
+                            });
+                        });
                     },
 
-                    updateReading: (_id: string, _patch: Partial<NewReadingInput>) => {
-                        // Implemented in Task 7
+                    updateReading: (id: string, patch: Partial<NewReadingInput>) => {
+                        set(state => {
+                            const reading = state.readings.find(r => r.id === id);
+                            if (reading) Object.assign(reading, patch);
+                        });
                     },
 
-                    deleteReading: (_id: string) => {
-                        // Implemented in Task 7
+                    deleteReading: (id: string) => {
+                        set(state => {
+                            state.readings = state.readings.filter(r => r.id !== id);
+                        });
                     },
                 },
             })),
