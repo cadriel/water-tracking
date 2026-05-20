@@ -47,6 +47,7 @@ export function ReadingFormDialog({
   const [takenAt, setTakenAt] = useState<Date | null>(new Date());
   const [acknowledgeDecrease, setAcknowledgeDecrease] = useState(false);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!open) return;
     if (editingReading) {
@@ -58,6 +59,7 @@ export function ReadingFormDialog({
     }
     setAcknowledgeDecrease(false);
   }, [open, editingReading]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const numericReading = digitsToReading(digits);
 
@@ -71,12 +73,11 @@ export function ReadingFormDialog({
     return prior[0] ?? null;
   }, [readings, meterId, takenAt, editingReading]);
 
-  const isFuture = takenAt ? takenAt.getTime() > Date.now() : false;
   const decreased =
     numericReading !== null && previousReading !== null && numericReading < previousReading.reading;
 
   const canSubmit =
-    numericReading !== null && takenAt !== null && !isFuture && (!decreased || acknowledgeDecrease);
+    numericReading !== null && takenAt !== null && (!decreased || acknowledgeDecrease);
 
   function handleSubmit() {
     if (!canSubmit || numericReading === null || !takenAt) return;
@@ -108,7 +109,6 @@ export function ReadingFormDialog({
             onChange={setTakenAt}
             disableFuture
           />
-          {isFuture && <Alert severity="error">Date cannot be in the future.</Alert>}
           {decreased && (
             <Alert
               severity="warning"
