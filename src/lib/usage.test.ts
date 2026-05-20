@@ -1,13 +1,19 @@
 import { averageDailyUsageLitres, averageDailyUsageLitresInLastNDays } from './usage';
 import type { Reading } from '../types';
 
-function makeReading(takenAt: string, reading: number, meterId = 'm1'): Reading {
+function makeReading(
+  takenAt: string,
+  reading: number,
+  meterId = 'm1',
+  source: 'homeowner' | 'utility' = 'homeowner',
+): Reading {
   return {
     id: `${takenAt}-${reading}`,
     meterId,
     reading,
     takenAt,
     createdAt: takenAt,
+    source,
   };
 }
 

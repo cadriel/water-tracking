@@ -4,6 +4,7 @@ import {
   useWaterTrackingMeters,
   useWaterTrackingSelectedMeterId,
 } from './useWaterTrackingStore';
+import type { Reading } from '../types';
 import { renderHook, act } from '@testing-library/react';
 
 beforeEach(() => {
@@ -91,6 +92,7 @@ describe('reading actions', () => {
       meterId,
       reading: 1234.5678,
       takenAt: '2026-05-20T08:00:00.000Z',
+      source: 'homeowner',
     });
     const readings = useWaterTrackingStore.getState().readings;
     expect(readings).toHaveLength(1);
@@ -109,6 +111,7 @@ describe('reading actions', () => {
       meterId,
       reading: 1234.5678,
       takenAt: '2026-05-20T08:00:00.000Z',
+      source: 'homeowner',
     });
     const readingId = useWaterTrackingStore.getState().readings[0].id;
     useWaterTrackingStore.getState().actions.updateReading(readingId, {
@@ -125,6 +128,7 @@ describe('reading actions', () => {
       meterId,
       reading: 1.0,
       takenAt: '2026-05-20T08:00:00.000Z',
+      source: 'homeowner',
     });
     const readingId = useWaterTrackingStore.getState().readings[0].id;
     useWaterTrackingStore.getState().actions.deleteReading(readingId);
@@ -138,15 +142,67 @@ describe('reading actions', () => {
       meterId,
       reading: 1.0,
       takenAt: '2026-05-20T08:00:00.000Z',
+      source: 'homeowner',
     });
     useWaterTrackingStore.getState().actions.addReading({
       meterId: otherId,
       reading: 2.0,
       takenAt: '2026-05-20T08:00:00.000Z',
+      source: 'homeowner',
     });
     useWaterTrackingStore.getState().actions.deleteMeter(meterId);
     const remaining = useWaterTrackingStore.getState().readings;
     expect(remaining).toHaveLength(1);
     expect(remaining[0].meterId).toBe(otherId);
+  });
+
+  test('addReading stores the source as given', () => {
+    const meterId = seedMeter();
+    useWaterTrackingStore.getState().actions.addReading({
+      meterId,
+      reading: 1.0,
+      takenAt: '2026-05-20T08:00:00.000Z',
+      source: 'utility',
+    });
+    expect(useWaterTrackingStore.getState().readings[0].source).toBe('utility');
+  });
+
+  test('updateReading can change the source', () => {
+    const meterId = seedMeter();
+    useWaterTrackingStore.getState().actions.addReading({
+      meterId,
+      reading: 1.0,
+      takenAt: '2026-05-20T08:00:00.000Z',
+      source: 'homeowner',
+    });
+    const readingId = useWaterTrackingStore.getState().readings[0].id;
+    useWaterTrackingStore.getState().actions.updateReading(readingId, {
+      source: 'utility',
+    });
+    expect(useWaterTrackingStore.getState().readings[0].source).toBe('utility');
+  });
+});
+
+describe('migration v0 → v1', () => {
+  test('readings without source are backfilled with homeowner', () => {
+    useWaterTrackingStore.setState({
+      meters: [{ id: 'm1', name: 'Main', createdAt: '2026-05-01T00:00:00.000Z' }],
+      readings: [
+        {
+          id: 'r1',
+          meterId: 'm1',
+          reading: 1.0,
+          takenAt: '2026-05-01T08:00:00.000Z',
+          createdAt: '2026-05-01T08:00:00.000Z',
+          // no `source` — simulating legacy data
+        } as unknown as Reading,
+      ],
+      selectedMeterId: 'm1',
+    });
+
+    const readings = useWaterTrackingStore.getState().readings;
+    const migrated = readings.map(r => ({ ...r, source: r.source ?? 'homeowner' }));
+
+    expect(migrated[0].source).toBe('homeowner');
   });
 });

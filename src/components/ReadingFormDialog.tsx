@@ -85,6 +85,7 @@ export function ReadingFormDialog({
       meterId,
       reading: numericReading,
       takenAt: takenAt.toISOString(),
+      source: 'homeowner' as const,
     };
     if (editingReading) {
       updateReading(editingReading.id, payload);
