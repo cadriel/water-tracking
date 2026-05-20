@@ -9,7 +9,9 @@ import Alert from '@mui/material/Alert';
 import FormHelperText from '@mui/material/FormHelperText';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { MeterDigitInput, type DigitValue } from './MeterDigitInput';
-import type { Reading } from '../types';
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+import type { Reading, ReadingSource } from '../types';
 import { useWaterTrackingActions, useWaterTrackingReadings } from '../store/useWaterTrackingStore';
 
 interface ReadingFormDialogProps {
@@ -46,6 +48,7 @@ export function ReadingFormDialog({
   const [digits, setDigits] = useState<DigitValue>({ white: '', red: '' });
   const [takenAt, setTakenAt] = useState<Date | null>(new Date());
   const [acknowledgeDecrease, setAcknowledgeDecrease] = useState(false);
+  const [source, setSource] = useState<ReadingSource>('homeowner');
 
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
@@ -53,9 +56,11 @@ export function ReadingFormDialog({
     if (editingReading) {
       setDigits(readingToDigits(editingReading.reading));
       setTakenAt(new Date(editingReading.takenAt));
+      setSource(editingReading.source);
     } else {
       setDigits({ white: '', red: '' });
       setTakenAt(new Date());
+      setSource('homeowner');
     }
     setAcknowledgeDecrease(false);
   }, [open, editingReading]);
@@ -85,7 +90,7 @@ export function ReadingFormDialog({
       meterId,
       reading: numericReading,
       takenAt: takenAt.toISOString(),
-      source: 'homeowner' as const,
+      source,
     };
     if (editingReading) {
       updateReading(editingReading.id, payload);
@@ -100,6 +105,18 @@ export function ReadingFormDialog({
       <DialogTitle>{editingReading ? 'Edit reading' : 'New reading'}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={3} sx={{ mt: 1 }}>
+          <ToggleButtonGroup
+            value={source}
+            exclusive
+            onChange={(_event, next) => {
+              if (next !== null) setSource(next as ReadingSource);
+            }}
+            size="small"
+            aria-label="Reading source"
+          >
+            <ToggleButton value="homeowner">Homeowner</ToggleButton>
+            <ToggleButton value="utility">Utility</ToggleButton>
+          </ToggleButtonGroup>
           <div>
             <MeterDigitInput value={digits} onChange={setDigits} />
             <FormHelperText>4 white digits (m³), then 4 red digits (decimal)</FormHelperText>
