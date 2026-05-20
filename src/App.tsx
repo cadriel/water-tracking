@@ -6,6 +6,7 @@ import { EmptyState } from './components/EmptyState';
 import { MeterManagerDialog } from './components/MeterManagerDialog';
 import { ReadingList } from './components/ReadingList';
 import { UsageChart } from './components/UsageChart';
+import { UsageStats } from './components/UsageStats';
 import {
     useWaterTrackingMeters,
     useWaterTrackingSelectedMeterId,
@@ -27,6 +28,7 @@ function App() {
                     <EmptyState onCreateMeter={() => setManagerOpen(true)} />
                 ) : meterToShow ? (
                     <>
+                        <UsageStats meterId={meterToShow} />
                         <ReadingList meterId={meterToShow} />
                         <UsageChart meterId={meterToShow} />
                     </>
