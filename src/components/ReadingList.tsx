@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import Chip from '@mui/material/Chip';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Table from '@mui/material/Table';
@@ -94,6 +95,14 @@ export function ReadingList({ meterId }: ReadingListProps) {
                   <TableCell>{format(new Date(reading.takenAt), 'dd MMM yyyy, HH:mm')}</TableCell>
                   <TableCell sx={{ fontFamily: 'monospace' }}>
                     {formatReading(reading.reading)}
+                    {reading.source === 'utility' && (
+                      <Chip
+                        size="small"
+                        label="Utility"
+                        color="secondary"
+                        sx={{ ml: 1, fontFamily: 'inherit' }}
+                      />
+                    )}
                   </TableCell>
                   <TableCell sx={{ fontFamily: 'monospace' }}>
                     {delta === null ? '—' : formatDelta(delta)}
