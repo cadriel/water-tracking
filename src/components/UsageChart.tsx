@@ -61,6 +61,7 @@ export function UsageChart({ meterId }: UsageChartProps) {
       <Paper variant="outlined" sx={{ p: 2 }}>
         <LineChart
           height={280}
+          hideLegend
           xAxis={[
             {
               data: xAxisDates,
