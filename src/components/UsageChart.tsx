@@ -1,12 +1,14 @@
 import { useMemo } from 'react';
-import Paper from '@mui/material/Paper';
-import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
-import { useTheme } from '@mui/material/styles';
+import Paper from '@mui/material/Paper';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
+import { useTheme, type Theme } from '@mui/material/styles';
 import { LineChart } from '@mui/x-charts/LineChart';
 import type { MarkElementProps } from '@mui/x-charts/LineChart';
 import { ChartsTooltipContainer, useAxesTooltip } from '@mui/x-charts/ChartsTooltip';
 import { format } from 'date-fns';
+import { BlueprintFrame } from './BlueprintFrame';
 import { useWaterTrackingReadings } from '../store/useWaterTrackingStore';
 
 interface AxisTooltipContentProps {
@@ -23,21 +25,59 @@ function AxisTooltipContent({ readings }: AxisTooltipContentProps) {
   if (!reading) return null;
 
   const date = axisValue instanceof Date ? axisValue : new Date(reading.takenAt);
-  const formattedDate = format(date, 'd MMM yyyy, HH:mm');
-  const formattedValue = `${reading.reading.toFixed(4)} m³`;
-  const dotColor =
-    reading.source === 'utility' ? theme.palette.secondary.main : theme.palette.primary.main;
-  const sourceLabel = reading.source === 'utility' ? 'Utility' : 'Homeowner';
+  const isUtility = reading.source === 'utility';
+  const dotColor = isUtility ? theme.palette.secondary.main : theme.palette.primary.main;
+  const sourceLabel = isUtility ? 'Utility' : 'Homeowner';
 
   return (
     <Paper
-      elevation={3}
-      sx={{ px: 1.5, py: 1, display: 'flex', flexDirection: 'column', gap: 0.5 }}
+      variant="outlined"
+      sx={{
+        px: 1.75,
+        py: 1.25,
+        minWidth: 220,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 0.75,
+        bgcolor: 'background.paper',
+        borderColor: 'divider',
+      }}
     >
-      <Typography variant="caption" color="text.secondary">
-        {formattedDate}
+      <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
+        <Typography
+          sx={{
+            fontFamily: 'var(--app-mono)',
+            fontSize: '0.62rem',
+            letterSpacing: '0.22em',
+            textTransform: 'uppercase',
+            color: 'text.secondary',
+          }}
+        >
+          Reading
+        </Typography>
+        <Typography
+          sx={{
+            fontFamily: 'var(--app-mono)',
+            fontSize: '0.62rem',
+            letterSpacing: '0.18em',
+            textTransform: 'uppercase',
+            color: dotColor,
+          }}
+        >
+          {sourceLabel}
+        </Typography>
+      </Stack>
+      <Typography
+        sx={{
+          fontFamily: 'var(--app-mono)',
+          fontSize: '0.72rem',
+          color: 'text.secondary',
+          letterSpacing: '0.04em',
+        }}
+      >
+        {format(date, 'd MMM yyyy · HH:mm')}
       </Typography>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      <Stack direction="row" spacing={1} sx={{ alignItems: 'baseline' }}>
         <Box
           sx={{
             width: 10,
@@ -45,15 +85,31 @@ function AxisTooltipContent({ readings }: AxisTooltipContentProps) {
             borderRadius: '50%',
             backgroundColor: dotColor,
             flexShrink: 0,
+            alignSelf: 'center',
           }}
         />
-        <Typography variant="body2">
-          {formattedValue}
-          <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 0.5 }}>
-            ({sourceLabel})
-          </Typography>
+        <Typography
+          sx={{
+            fontFamily: 'var(--app-mono)',
+            fontSize: '1rem',
+            fontWeight: 500,
+            color: 'text.primary',
+            fontVariantNumeric: 'tabular-nums',
+          }}
+        >
+          {reading.reading.toFixed(4)}
         </Typography>
-      </Box>
+        <Typography
+          sx={{
+            fontFamily: 'var(--app-mono)',
+            fontSize: '0.72rem',
+            color: 'text.secondary',
+            letterSpacing: '0.08em',
+          }}
+        >
+          m³
+        </Typography>
+      </Stack>
     </Paper>
   );
 }
@@ -78,6 +134,7 @@ const THIRTY_DAYS_AGO = Date.now() - 30 * MS_PER_DAY;
 export function UsageChart({ meterId }: UsageChartProps) {
   const readings = useWaterTrackingReadings();
   const theme = useTheme();
+
   const last30Days = useMemo(() => {
     const cutoff = THIRTY_DAYS_AGO;
     return readings
@@ -89,61 +146,157 @@ export function UsageChart({ meterId }: UsageChartProps) {
 
   const AxisTooltip = useMemo(() => makeAxisTooltip(last30Days), [last30Days]);
 
-  if (last30Days.length < 2) {
-    return (
-      <Paper variant="outlined" sx={{ p: 4, textAlign: 'center', mt: 3 }}>
-        <Typography color="text.secondary">Add another reading to see usage over time.</Typography>
-      </Paper>
-    );
-  }
-
-  const xAxisDates = last30Days.map(r => new Date(r.takenAt));
-  const values = last30Days.map(r => r.reading);
-
-  function ColorCodedMark({ dataIndex, ...rest }: MarkElementProps) {
-    const reading = last30Days[dataIndex];
-    const fill =
-      reading?.source === 'utility' ? theme.palette.secondary.main : theme.palette.primary.main;
-    return (
-      <circle
-        cx={rest.x}
-        cy={rest.y}
-        r={5}
-        fill={fill}
-        stroke={theme.palette.background.paper}
-        strokeWidth={1.5}
-      />
-    );
-  }
-
   return (
-    <Box sx={{ mt: 3 }}>
-      <Typography variant="h6" gutterBottom>
-        Usage over time (last 30 days)
-      </Typography>
-      <Paper variant="outlined" sx={{ p: 2 }}>
-        <LineChart
-          height={280}
-          hideLegend
-          xAxis={[
-            {
-              data: xAxisDates,
-              scaleType: 'time',
-              valueFormatter: (value: Date) => value.toLocaleDateString(),
-            },
-          ]}
-          series={[
-            {
-              data: values,
-              label: 'Reading (m³)',
-              color: theme.palette.text.secondary,
-              showMark: true,
-              valueFormatter: value => (value === null ? '' : `${value.toFixed(4)} m³`),
-            },
-          ]}
-          slots={{ mark: ColorCodedMark, tooltip: AxisTooltip }}
-        />
-      </Paper>
+    <Box>
+      <Stack
+        direction="row"
+        sx={{ mb: 3, justifyContent: 'space-between', alignItems: 'flex-end', gap: 2 }}
+      >
+        <Stack spacing={0.5}>
+          <Typography
+            sx={{
+              fontFamily: 'var(--app-mono)',
+              fontSize: '0.66rem',
+              letterSpacing: '0.28em',
+              textTransform: 'uppercase',
+              color: 'secondary.main',
+            }}
+          >
+            Section 03 · Hydrograph
+          </Typography>
+          <Typography
+            variant="h4"
+            sx={{
+              fontSize: { xs: '1.7rem', md: '2.1rem' },
+              fontStyle: 'italic',
+              letterSpacing: '-0.015em',
+              fontVariationSettings: '"opsz" 96, "SOFT" 80, "WONK" 1',
+            }}
+          >
+            Flow over time
+          </Typography>
+        </Stack>
+        <Typography
+          sx={{
+            fontFamily: 'var(--app-mono)',
+            fontSize: '0.66rem',
+            letterSpacing: '0.18em',
+            textTransform: 'uppercase',
+            color: 'text.secondary',
+            mb: 0.5,
+          }}
+        >
+          Window · 30 days
+        </Typography>
+      </Stack>
+
+      {last30Days.length < 2 ? (
+        <BlueprintFrame tag="HYD/03" subTag="VOID">
+          <Box sx={{ py: 4, textAlign: 'center' }}>
+            <Typography
+              sx={{
+                fontFamily: 'var(--app-mono)',
+                fontSize: '0.72rem',
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
+                color: 'text.secondary',
+              }}
+            >
+              Awaiting a second reading.
+            </Typography>
+          </Box>
+        </BlueprintFrame>
+      ) : (
+        <BlueprintFrame tag="HYD/03" subTag={`N=${last30Days.length}`} padding={1.5}>
+          <LineChart
+            height={300}
+            hideLegend
+            margin={{ top: 16, right: 24, bottom: 32, left: 56 }}
+            xAxis={[
+              {
+                data: last30Days.map(r => new Date(r.takenAt)),
+                scaleType: 'time',
+                valueFormatter: (value: Date) => value.toLocaleDateString(),
+                tickLabelStyle: {
+                  fontFamily: 'IBM Plex Mono, monospace',
+                  fontSize: 11,
+                  letterSpacing: '0.04em',
+                  fill: theme.palette.text.secondary,
+                },
+              },
+            ]}
+            yAxis={[
+              {
+                tickLabelStyle: {
+                  fontFamily: 'IBM Plex Mono, monospace',
+                  fontSize: 11,
+                  letterSpacing: '0.04em',
+                  fill: theme.palette.text.secondary,
+                },
+              },
+            ]}
+            series={[
+              {
+                data: last30Days.map(r => r.reading),
+                label: 'Reading (m³)',
+                color: theme.palette.text.secondary,
+                showMark: true,
+                curve: 'linear',
+                valueFormatter: value => (value === null ? '' : `${value.toFixed(4)} m³`),
+              },
+            ]}
+            grid={{ horizontal: true }}
+            sx={{
+              '& .MuiChartsAxis-line': { stroke: theme.palette.divider },
+              '& .MuiChartsAxis-tick': { stroke: theme.palette.divider },
+              '& .MuiChartsGrid-line': {
+                stroke: theme.palette.divider,
+                strokeDasharray: '2 4',
+              },
+              '& .MuiLineElement-root': {
+                strokeWidth: 1.25,
+                strokeDasharray: '0',
+              },
+            }}
+            slots={{
+              mark: createColorCodedMark(last30Days, theme),
+              tooltip: AxisTooltip,
+            }}
+          />
+        </BlueprintFrame>
+      )}
     </Box>
   );
+}
+
+type ChartReading = { source: string };
+
+function createColorCodedMark(readings: ChartReading[], theme: Theme) {
+  return function ColorCodedMark({ dataIndex, ...rest }: MarkElementProps) {
+    const reading = readings[dataIndex];
+    const isUtility = reading?.source === 'utility';
+    const fill = isUtility ? theme.palette.secondary.main : theme.palette.primary.main;
+    return (
+      <>
+        {/* outer halo — gives a watery refraction feel */}
+        <circle
+          cx={rest.x}
+          cy={rest.y}
+          r={9}
+          fill={fill}
+          opacity={0.16}
+          style={{ pointerEvents: 'none' }}
+        />
+        {/* the mark itself */}
+        <circle
+          cx={rest.x}
+          cy={rest.y}
+          r={4.5}
+          fill={fill}
+          stroke={theme.palette.background.paper}
+          strokeWidth={1.5}
+        />
+      </>
+    );
+  };
 }

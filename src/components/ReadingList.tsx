@@ -1,8 +1,6 @@
 import { useMemo, useState } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
-import Chip from '@mui/material/Chip';
-import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -17,6 +15,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { format } from 'date-fns';
 import { ReadingFormDialog } from './ReadingFormDialog';
+import { BlueprintFrame } from './BlueprintFrame';
 import { formatDelta, formatReading } from '../lib/formatting';
 import type { Reading } from '../types';
 import { useWaterTrackingActions, useWaterTrackingReadings } from '../store/useWaterTrackingStore';
@@ -28,6 +27,7 @@ interface ReadingListProps {
 interface DisplayRow {
   reading: Reading;
   delta: number | null;
+  ordinal: number; // 0-based, 0 is oldest
 }
 
 export function ReadingList({ meterId }: ReadingListProps) {
@@ -45,6 +45,7 @@ export function ReadingList({ meterId }: ReadingListProps) {
     const withDeltas: DisplayRow[] = sortedAsc.map((reading, index) => ({
       reading,
       delta: index === 0 ? null : reading.reading - sortedAsc[index - 1].reading,
+      ordinal: index,
     }));
 
     return withDeltas.reverse(); // newest first
@@ -68,63 +69,234 @@ export function ReadingList({ meterId }: ReadingListProps) {
 
   return (
     <Box>
-      <Stack direction="row" sx={{ mb: 2, justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6">Readings</Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={openNew}>
+      <Stack
+        direction="row"
+        sx={{ mb: 3, justifyContent: 'space-between', alignItems: 'flex-end', gap: 2 }}
+      >
+        <Stack spacing={0.5}>
+          <Typography
+            sx={{
+              fontFamily: 'var(--app-mono)',
+              fontSize: '0.66rem',
+              letterSpacing: '0.28em',
+              textTransform: 'uppercase',
+              color: 'secondary.main',
+            }}
+          >
+            Section 01 · Ledger
+          </Typography>
+          <Typography
+            variant="h4"
+            sx={{
+              fontSize: { xs: '1.7rem', md: '2.1rem' },
+              fontStyle: 'italic',
+              letterSpacing: '-0.015em',
+              fontVariationSettings: '"opsz" 96, "SOFT" 80, "WONK" 1',
+            }}
+          >
+            Readings
+          </Typography>
+        </Stack>
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<AddIcon />}
+          onClick={openNew}
+          sx={{ flexShrink: 0 }}
+        >
           Add reading
         </Button>
       </Stack>
+
       {rows.length === 0 ? (
-        <Paper variant="outlined" sx={{ p: 4, textAlign: 'center' }}>
-          <Typography color="text.secondary">No readings yet. Add your first reading.</Typography>
-        </Paper>
+        <BlueprintFrame tag="LOG/01" subTag="VOID">
+          <Box sx={{ py: 3, textAlign: 'center' }}>
+            <Typography
+              sx={{
+                fontFamily: 'var(--app-mono)',
+                fontSize: '0.72rem',
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
+                color: 'text.secondary',
+              }}
+            >
+              No readings recorded. Add the first.
+            </Typography>
+          </Box>
+        </BlueprintFrame>
       ) : (
-        <TableContainer component={Paper} variant="outlined">
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Date / time</TableCell>
-                <TableCell>Reading</TableCell>
-                <TableCell>Usage since previous</TableCell>
-                <TableCell align="right">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {rows.map(({ reading, delta }) => (
-                <TableRow key={reading.id}>
-                  <TableCell>{format(new Date(reading.takenAt), 'dd MMM yyyy, HH:mm')}</TableCell>
-                  <TableCell sx={{ fontFamily: 'monospace' }}>
-                    {formatReading(reading.reading)}
-                    {reading.source === 'utility' && (
-                      <Chip
-                        size="small"
-                        label="Utility"
-                        color="secondary"
-                        sx={{ ml: 1, fontFamily: 'inherit' }}
-                      />
-                    )}
-                  </TableCell>
-                  <TableCell sx={{ fontFamily: 'monospace' }}>
-                    {delta === null ? '—' : formatDelta(delta)}
-                  </TableCell>
-                  <TableCell align="right">
-                    <IconButton size="small" onClick={() => openEdit(reading)} aria-label="Edit">
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleDelete(reading)}
-                      aria-label="Delete"
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
+        <BlueprintFrame tag="LOG/01" subTag={`N=${rows.length}`} padding={0}>
+          <TableContainer>
+            <Table size="small" sx={{ '& .MuiTableCell-root': { borderBottomStyle: 'dashed' } }}>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ width: 56, pl: 3 }}>No.</TableCell>
+                  <TableCell>When</TableCell>
+                  <TableCell>Reading</TableCell>
+                  <TableCell>Δ since previous</TableCell>
+                  <TableCell align="right" sx={{ pr: 3 }}>
+                    Ops
                   </TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              </TableHead>
+              <TableBody>
+                {rows.map(({ reading, delta, ordinal }) => {
+                  const isUtility = reading.source === 'utility';
+                  const deltaPositive = delta !== null && delta >= 0;
+                  return (
+                    <TableRow
+                      key={reading.id}
+                      sx={{
+                        '&:hover': {
+                          bgcolor: theme =>
+                            `color-mix(in srgb, ${theme.vars?.palette.primary.main ?? theme.palette.primary.main} 4%, transparent)`,
+                        },
+                        '&:last-of-type .MuiTableCell-root': { borderBottom: 'none' },
+                      }}
+                    >
+                      <TableCell sx={{ pl: 3 }}>
+                        <Typography
+                          component="span"
+                          sx={{
+                            fontFamily: 'var(--app-mono)',
+                            fontSize: '0.72rem',
+                            letterSpacing: '0.1em',
+                            color: 'text.secondary',
+                          }}
+                        >
+                          {String(ordinal + 1).padStart(3, '0')}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Stack spacing={0.25}>
+                          <Typography
+                            sx={{
+                              fontFamily: 'var(--app-mono)',
+                              fontSize: '0.86rem',
+                              fontWeight: 500,
+                              color: 'text.primary',
+                              fontVariantNumeric: 'tabular-nums',
+                            }}
+                          >
+                            {format(new Date(reading.takenAt), 'dd MMM yyyy')}
+                          </Typography>
+                          <Typography
+                            sx={{
+                              fontFamily: 'var(--app-mono)',
+                              fontSize: '0.7rem',
+                              color: 'text.secondary',
+                              letterSpacing: '0.06em',
+                            }}
+                          >
+                            {format(new Date(reading.takenAt), 'HH:mm')}
+                          </Typography>
+                        </Stack>
+                      </TableCell>
+                      <TableCell>
+                        <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center' }}>
+                          <Box
+                            aria-hidden
+                            sx={{
+                              width: 8,
+                              height: 8,
+                              borderRadius: '50%',
+                              flexShrink: 0,
+                              bgcolor: isUtility ? 'secondary.main' : 'primary.main',
+                              boxShadow: theme =>
+                                `0 0 0 3px color-mix(in srgb, ${
+                                  isUtility
+                                    ? (theme.vars?.palette.secondary.main ??
+                                      theme.palette.secondary.main)
+                                    : (theme.vars?.palette.primary.main ??
+                                      theme.palette.primary.main)
+                                } 18%, transparent)`,
+                            }}
+                          />
+                          <Typography
+                            sx={{
+                              fontFamily: 'var(--app-mono)',
+                              fontSize: '0.95rem',
+                              fontWeight: 500,
+                              fontVariantNumeric: 'tabular-nums',
+                              color: 'text.primary',
+                              letterSpacing: '0.01em',
+                            }}
+                          >
+                            {formatReading(reading.reading)}
+                          </Typography>
+                          {isUtility && (
+                            <Box
+                              component="span"
+                              sx={{
+                                px: 0.75,
+                                py: 0.25,
+                                fontFamily: 'var(--app-mono)',
+                                fontSize: '0.6rem',
+                                letterSpacing: '0.18em',
+                                textTransform: 'uppercase',
+                                color: 'secondary.main',
+                                border: '1px solid',
+                                borderColor: 'secondary.main',
+                                borderRadius: 0.5,
+                              }}
+                            >
+                              Utility
+                            </Box>
+                          )}
+                        </Stack>
+                      </TableCell>
+                      <TableCell>
+                        {delta === null ? (
+                          <Typography
+                            component="span"
+                            sx={{
+                              fontFamily: 'var(--app-mono)',
+                              fontSize: '0.78rem',
+                              color: 'text.disabled',
+                            }}
+                          >
+                            ——
+                          </Typography>
+                        ) : (
+                          <Typography
+                            component="span"
+                            sx={{
+                              fontFamily: 'var(--app-mono)',
+                              fontSize: '0.8rem',
+                              fontVariantNumeric: 'tabular-nums',
+                              color: deltaPositive ? 'text.primary' : 'error.main',
+                              letterSpacing: '0.01em',
+                            }}
+                          >
+                            {formatDelta(delta)}
+                          </Typography>
+                        )}
+                      </TableCell>
+                      <TableCell align="right" sx={{ pr: 3 }}>
+                        <IconButton
+                          size="small"
+                          onClick={() => openEdit(reading)}
+                          aria-label="Edit"
+                        >
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleDelete(reading)}
+                          aria-label="Delete"
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </BlueprintFrame>
       )}
+
       <ReadingFormDialog
         open={formOpen}
         onClose={() => setFormOpen(false)}
