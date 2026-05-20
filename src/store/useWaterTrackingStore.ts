@@ -30,6 +30,8 @@ const initialState: WaterTrackingState = {
     selectedMeterId: null,
 };
 
+// Exported for tests and non-React subscribers only.
+// Components should consume the per-slice selector hooks below.
 export const useWaterTrackingStore = create<WaterTrackingState & WaterTrackingActions>()(
     devtools(
         persist(
@@ -48,14 +50,14 @@ export const useWaterTrackingStore = create<WaterTrackingState & WaterTrackingAc
                         return id;
                     },
 
-                    renameMeter: (id, meterName) => {
+                    renameMeter: (id: string, meterName: string) => {
                         set(state => {
                             const meter = state.meters.find(m => m.id === id);
                             if (meter) meter.name = meterName;
                         });
                     },
 
-                    deleteMeter: (id) => {
+                    deleteMeter: (id: string) => {
                         set(state => {
                             state.meters = state.meters.filter(m => m.id !== id);
                             state.readings = state.readings.filter(r => r.meterId !== id);
@@ -65,21 +67,21 @@ export const useWaterTrackingStore = create<WaterTrackingState & WaterTrackingAc
                         });
                     },
 
-                    selectMeter: (id) => {
+                    selectMeter: (id: string | null) => {
                         set(state => {
                             state.selectedMeterId = id;
                         });
                     },
 
-                    addReading: () => {
+                    addReading: (_input: NewReadingInput) => {
                         // Implemented in Task 7
                     },
 
-                    updateReading: () => {
+                    updateReading: (_id: string, _patch: Partial<NewReadingInput>) => {
                         // Implemented in Task 7
                     },
 
-                    deleteReading: () => {
+                    deleteReading: (_id: string) => {
                         // Implemented in Task 7
                     },
                 },
