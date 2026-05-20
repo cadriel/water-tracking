@@ -7,6 +7,7 @@ import {
     averageDailyUsageLitresInLastNDays,
 } from '../lib/usage';
 import { useWaterTrackingReadings } from '../store/useWaterTrackingStore';
+import { Box } from '@mui/material';
 
 interface UsageStatsProps {
     meterId: string;
@@ -65,14 +66,17 @@ export function UsageStats({ meterId }: UsageStatsProps) {
     if (meterReadings.length < 2) return null;
 
     return (
-        <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
-            <Typography variant="overline" color="text.secondary">
+        <Box sx={{ mt: 3 }}>
+            <Typography variant="h6" gutterBottom>
                 Average daily usage
             </Typography>
-            <Stack direction="row" spacing={4} sx={{ mt: 1 }}>
-                <StatColumn label="All time" value={allTime} />
-                <StatColumn label="Last 30 days" value={last30Days} />
-            </Stack>
-        </Paper>
+            
+            <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
+                <Stack direction="row" spacing={4} sx={{ mt: 1 }}>
+                    <StatColumn label="All time" value={allTime} />
+                    <StatColumn label="Last 30 days" value={last30Days} />
+                </Stack>
+            </Paper>
+        </Box>
     );
 }

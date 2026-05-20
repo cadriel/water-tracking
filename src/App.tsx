@@ -28,8 +28,8 @@ function App() {
                     <EmptyState onCreateMeter={() => setManagerOpen(true)} />
                 ) : meterToShow ? (
                     <>
-                        <UsageStats meterId={meterToShow} />
                         <ReadingList meterId={meterToShow} />
+                        <UsageStats meterId={meterToShow} />
                         <UsageChart meterId={meterToShow} />
                     </>
                 ) : null}
