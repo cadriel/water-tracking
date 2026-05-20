@@ -1,0 +1,108 @@
+import { create } from 'zustand';
+import { devtools, persist } from 'zustand/middleware';
+import { immer } from 'zustand/middleware/immer';
+import type { Meter, Reading, NewReadingInput } from '../types';
+
+export interface WaterTrackingState {
+    meters: Meter[];
+    readings: Reading[];
+    selectedMeterId: string | null;
+}
+
+interface WaterTrackingActions {
+    actions: {
+        addMeter: (name: string) => string;
+        renameMeter: (id: string, name: string) => void;
+        deleteMeter: (id: string) => void;
+        selectMeter: (id: string | null) => void;
+
+        addReading: (input: NewReadingInput) => void;
+        updateReading: (id: string, patch: Partial<NewReadingInput>) => void;
+        deleteReading: (id: string) => void;
+    };
+}
+
+const name = 'water-tracking-store';
+
+const initialState: WaterTrackingState = {
+    meters: [],
+    readings: [],
+    selectedMeterId: null,
+};
+
+export const useWaterTrackingStore = create<WaterTrackingState & WaterTrackingActions>()(
+    devtools(
+        persist(
+            immer(set => ({
+                ...initialState,
+                actions: {
+                    addMeter: (meterName: string) => {
+                        const id = crypto.randomUUID();
+                        const createdAt = new Date().toISOString();
+                        set(state => {
+                            state.meters.push({ id, name: meterName, createdAt });
+                            if (state.selectedMeterId === null) {
+                                state.selectedMeterId = id;
+                            }
+                        });
+                        return id;
+                    },
+
+                    renameMeter: (id, meterName) => {
+                        set(state => {
+                            const meter = state.meters.find(m => m.id === id);
+                            if (meter) meter.name = meterName;
+                        });
+                    },
+
+                    deleteMeter: (id) => {
+                        set(state => {
+                            state.meters = state.meters.filter(m => m.id !== id);
+                            state.readings = state.readings.filter(r => r.meterId !== id);
+                            if (state.selectedMeterId === id) {
+                                state.selectedMeterId = state.meters[0]?.id ?? null;
+                            }
+                        });
+                    },
+
+                    selectMeter: (id) => {
+                        set(state => {
+                            state.selectedMeterId = id;
+                        });
+                    },
+
+                    addReading: () => {
+                        // Implemented in Task 7
+                    },
+
+                    updateReading: () => {
+                        // Implemented in Task 7
+                    },
+
+                    deleteReading: () => {
+                        // Implemented in Task 7
+                    },
+                },
+            })),
+            {
+                name,
+                version: 0,
+                partialize: state => ({
+                    meters: state.meters,
+                    readings: state.readings,
+                    selectedMeterId: state.selectedMeterId,
+                }),
+            }
+        ),
+        { name }
+    )
+);
+
+export const useWaterTrackingMeters = () =>
+    useWaterTrackingStore(state => state.meters);
+export const useWaterTrackingReadings = () =>
+    useWaterTrackingStore(state => state.readings);
+export const useWaterTrackingSelectedMeterId = () =>
+    useWaterTrackingStore(state => state.selectedMeterId);
+export const useWaterTrackingActions = () =>
+    useWaterTrackingStore(state => state.actions);
