@@ -59,52 +59,110 @@ white + `0000` red. The total in litres is `reading * 1000`.
 
 ## Zustand Store
 
-Single store, composed as:
+Single store at `src/store/useWaterTrackingStore.ts`, following the project's
+existing store-formatting conventions:
 
-```ts
-devtools(
-  persist(
-    immer((set, get) => ({ ... })),
-    { name: "water-tracking" }
-  ),
-  { name: "water-tracking" }
-)
-```
+- **State and actions split into two interfaces**, with actions nested under
+  an `actions: {}` object on the store
+- A `name` constant declared once and reused for both `persist`'s storage key
+  and `devtools`' store label
+- An `initialState` constant declared separately and spread into the
+  `immer` initialiser
+- `persist` configured with `version: 0` and an explicit `partialize` listing
+  exactly which fields survive reloads
+- Per-slice selector hooks exported alongside the store (one per state field
+  plus a single `useWaterTrackingActions` hook)
+- The `create<T>()(...)` curry form for correct middleware type inference
 
 **Shape:**
 
 ```ts
-type Store = {
-  meters: Meter[];
-  readings: Reading[];
-  selectedMeterId: string | null;
+import { create } from 'zustand';
+import { devtools, persist } from 'zustand/middleware';
+import { immer } from 'zustand/middleware/immer';
 
-  // meter actions
-  addMeter: (name: string) => string;          // returns new meter id
-  renameMeter: (id: string, name: string) => void;
-  deleteMeter: (id: string) => void;           // cascades to readings
-  selectMeter: (id: string | null) => void;
+export interface WaterTrackingState {
+    meters: Meter[];
+    readings: Reading[];
+    selectedMeterId: string | null;
+}
 
-  // reading actions
-  addReading: (input: NewReadingInput) => void;
-  updateReading: (id: string, patch: Partial<ReadingInput>) => void;
-  deleteReading: (id: string) => void;
-};
+interface WaterTrackingActions {
+    actions: {
+        // meter actions
+        addMeter: (name: string) => string;                              // returns new meter id
+        renameMeter: (id: string, name: string) => void;
+        deleteMeter: (id: string) => void;                               // cascades to readings
+        selectMeter: (id: string | null) => void;
+
+        // reading actions
+        addReading: (input: NewReadingInput) => void;
+        updateReading: (id: string, patch: Partial<NewReadingInput>) => void;
+        deleteReading: (id: string) => void;
+    };
+}
 
 type NewReadingInput = {
-  meterId: string;
-  reading: number;
-  takenAt: string;
+    meterId: string;
+    reading: number;
+    takenAt: string;
 };
+
+const name = 'water-tracking-store';
+
+const initialState: WaterTrackingState = {
+    meters: [],
+    readings: [],
+    selectedMeterId: null,
+};
+
+const useWaterTrackingStore = create<WaterTrackingState & WaterTrackingActions>()(
+    devtools(
+        persist(
+            immer(set => ({
+                ...initialState,
+                actions: {
+                    // ...implementations using set(state => { state.x = ... })
+                },
+            })),
+            {
+                name,
+                version: 0,
+                partialize: state => ({
+                    meters: state.meters,
+                    readings: state.readings,
+                    selectedMeterId: state.selectedMeterId,
+                }),
+            }
+        ),
+        { name }
+    )
+);
+
+// Selector hooks — one per slice + actions
+export const useWaterTrackingMeters = () => useWaterTrackingStore(state => state.meters);
+export const useWaterTrackingReadings = () => useWaterTrackingStore(state => state.readings);
+export const useWaterTrackingSelectedMeterId = () => useWaterTrackingStore(state => state.selectedMeterId);
+export const useWaterTrackingActions = () => useWaterTrackingStore(state => state.actions);
 ```
 
-`immer` lets actions write to draft state directly (`state.readings.push(r)`).
-`persist` writes the entire state under `"water-tracking"` in `localStorage`.
-`devtools` exposes named actions to the Redux DevTools browser extension.
+Components consume the store via the per-slice selector hooks, never by
+subscribing to the whole store. Actions are pulled via
+`useWaterTrackingActions()` (stable reference — never causes re-renders since
+the `actions` object is created once at store init).
 
-When a meter is deleted, all its readings are removed in the same action. If
-the deleted meter was selected, `selectedMeterId` falls back to the first
-remaining meter or `null`.
+**Derived data** (e.g. readings filtered to the selected meter, sorted by
+`takenAt`) is computed in components or small helper functions in
+`src/lib/`, not stored in the store. The store holds only canonical state.
+
+**Cascade behaviour:** `deleteMeter(id)` removes the meter and every reading
+with `meterId === id` in the same `set` call. If the deleted meter was the
+selected one, `selectedMeterId` falls back to the first remaining meter's
+`id` or `null`.
+
+**`partialize`:** all three state fields are persisted. Listed explicitly
+(rather than persisting everything) so future ephemeral UI state added to
+the store doesn't accidentally leak into `localStorage`.
 
 ## UI Structure
 
@@ -119,7 +177,7 @@ src/
     MeterDigitInput.tsx        // 8-digit white+red input control
     UsageChart.tsx             // MUI X line chart for selected meter
   store/
-    useStore.ts                // Zustand store + actions
+    useWaterTrackingStore.ts   // Zustand store + selector hooks
   lib/
     formatting.ts              // splitDigits, formatReading, formatDelta
   types.ts                     // Meter, Reading, input types
@@ -180,11 +238,13 @@ src/
 
 ## Persistence
 
-- Zustand `persist` middleware, storage key `"water-tracking"`, default
-  `localStorage` backend
-- Whole store is serialised — small data volumes (hundreds of readings max
-  in any realistic horizon)
-- No migration framework yet; we'll add one if/when the schema changes
+- Zustand `persist` middleware, storage key `"water-tracking-store"`,
+  default `localStorage` backend
+- `partialize` explicitly lists `meters`, `readings`, and `selectedMeterId`
+  as the persisted fields (small data volumes — hundreds of readings max in
+  any realistic horizon)
+- `version: 0` is set now so we have a hook for a `migrate` function later
+  if the schema changes
 
 ## Validation Rules (Summary)
 
@@ -215,8 +275,23 @@ src/
   ensure the digit input is keyboard-navigable, but we won't perform a full
   WCAG review.
 
+## Theming
+
+- Use MUI's `CssVarsProvider` with `extendTheme` so light and dark palettes
+  are both defined and switchable via CSS variables (no full re-render on
+  theme change)
+- `defaultMode: 'system'` so the app follows the OS-level preference by
+  default. The browser's `prefers-color-scheme` media query drives it
+- Include `<InitColorSchemeScript />` in `index.html` (or before the root
+  render) to prevent the wrong-theme flash on first paint
+- No in-app theme toggle for now (system preference is authoritative)
+- Default palettes are fine; we won't customise primary/secondary colours
+- The `MeterDigitInput` is the one component that needs explicit dark/light
+  treatment — the white-digit block uses theme-aware light surface +
+  dark text, and the red-digit block stays red in both modes (matching a
+  physical meter's appearance)
+
 ## Open Decisions Deferred to Implementation
 
-- Exact MUI theme (light only is fine; we'll pick reasonable defaults)
 - ID generation: `crypto.randomUUID()` (browser-native, no dep)
 - Date picker library: MUI X Date Pickers (free community version)
