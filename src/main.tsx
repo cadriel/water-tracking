@@ -1,7 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
-    Experimental_CssVarsProvider as CssVarsProvider,
+    CssVarsProvider,
     getInitColorSchemeScript,
 } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -15,7 +15,7 @@ import { theme } from './theme';
 const initScript = getInitColorSchemeScript({ defaultMode: 'system' });
 if (initScript) {
     const script = document.createElement('script');
-    script.textContent = String(initScript.props.children);
+    script.textContent = initScript.props.dangerouslySetInnerHTML?.__html ?? '';
     document.head.insertBefore(script, document.head.firstChild);
 }
 
