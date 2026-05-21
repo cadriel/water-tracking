@@ -1,5 +1,6 @@
 import { beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { UsageChart } from '../UsageChart';
 import { useWaterTrackingStore } from '../../store/useWaterTrackingStore';
 
@@ -11,62 +12,71 @@ function isoDaysAgo(n: number): string {
   return new Date(Date.now() - n * 24 * 60 * 60 * 1000).toISOString();
 }
 
+function seedDenseRecentReads(meterId: string): void {
+  const { addReading } = useWaterTrackingStore.getState().actions;
+  for (let i = 0; i < 6; i++) {
+    addReading({
+      meterId,
+      reading: 1300 + i * 0.05,
+      takenAt: isoDaysAgo(25 - i * 4),
+      source: 'homeowner',
+    });
+  }
+}
+
 beforeEach(() => {
   localStorage.clear();
   useWaterTrackingStore.setState({ meters: [], readings: [], selectedMeterId: null });
 });
 
-test('shows the "Awaiting a second reading" placeholder when fewer than two readings fall in the last 30 days', () => {
+test('renders the Hydrograph section header', () => {
   const meterId = seedMeter();
-  useWaterTrackingStore.getState().actions.addReading({
-    meterId,
-    reading: 1300,
-    takenAt: isoDaysAgo(2),
-    source: 'homeowner',
-  });
   render(<UsageChart meterId={meterId} />);
-  expect(screen.getByText(/awaiting a second reading/i)).toBeInTheDocument();
+  expect(screen.getByText(/section 03 · hydrograph/i)).toBeInTheDocument();
 });
 
-test('readings older than 30 days are excluded from the chart window', () => {
+test('defaults to the Recent (30 D) view', () => {
   const meterId = seedMeter();
-  const { addReading } = useWaterTrackingStore.getState().actions;
-  addReading({
-    meterId,
-    reading: 1290,
-    takenAt: isoDaysAgo(60),
-    source: 'homeowner',
-  });
-  addReading({
-    meterId,
-    reading: 1300,
-    takenAt: isoDaysAgo(2),
-    source: 'homeowner',
-  });
-
+  seedDenseRecentReads(meterId);
   render(<UsageChart meterId={meterId} />);
-  // The 60-day-old reading is excluded, so only 1 falls in the window → placeholder.
-  expect(screen.getByText(/awaiting a second reading/i)).toBeInTheDocument();
+  // The Recent view shows the mode subtitle; the line view does not.
+  expect(screen.getByText(/window · 30 days/i)).toBeInTheDocument();
 });
 
-test('renders the chart frame with a sample count when there are two or more in-window readings', () => {
+test('clicking the 12 MO toggle switches to the yearly utility bars view', async () => {
   const meterId = seedMeter();
-  const { addReading } = useWaterTrackingStore.getState().actions;
-  addReading({
-    meterId,
-    reading: 1300,
-    takenAt: isoDaysAgo(3),
-    source: 'homeowner',
-  });
-  addReading({
-    meterId,
-    reading: 1305,
-    takenAt: isoDaysAgo(1),
-    source: 'homeowner',
-  });
-
+  seedDenseRecentReads(meterId);
+  const user = userEvent.setup();
   render(<UsageChart meterId={meterId} />);
-  expect(screen.queryByText(/awaiting a second reading/i)).not.toBeInTheDocument();
-  // The frame's sub-tag reflects the in-window count.
-  expect(screen.getByText('N=2')).toBeInTheDocument();
+
+  await user.click(screen.getByRole('button', { name: /12 mo/i }));
+
+  // Yearly view shows its own subtitle and either an empty state or bar count.
+  expect(screen.getByText(/window · 12 months/i)).toBeInTheDocument();
+  expect(screen.queryByText(/window · 30 days/i)).not.toBeInTheDocument();
+});
+
+test('clicking the TREND toggle switches to the line chart view', async () => {
+  const meterId = seedMeter();
+  seedDenseRecentReads(meterId);
+  const user = userEvent.setup();
+  render(<UsageChart meterId={meterId} />);
+
+  await user.click(screen.getByRole('button', { name: /trend/i }));
+
+  // The line chart uses the N= sub-tag pattern; the recent bars view uses BARS=.
+  expect(screen.queryByText(/window · 30 days/i)).not.toBeInTheDocument();
+  expect(screen.getByText(/^N=/)).toBeInTheDocument();
+});
+
+test('clicking back to the 30 D toggle returns to the recent bars view', async () => {
+  const meterId = seedMeter();
+  seedDenseRecentReads(meterId);
+  const user = userEvent.setup();
+  render(<UsageChart meterId={meterId} />);
+
+  await user.click(screen.getByRole('button', { name: /trend/i }));
+  await user.click(screen.getByRole('button', { name: /30 d/i }));
+
+  expect(screen.getByText(/window · 30 days/i)).toBeInTheDocument();
 });
