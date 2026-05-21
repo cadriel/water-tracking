@@ -103,6 +103,59 @@ test('editing a utility/estimated reading hydrates source and isEstimated', () =
   );
 });
 
+test('"Add reading" stays disabled when the value is below the previous reading', async () => {
+  const user = userEvent.setup();
+  const meterId = seedMeter();
+  useWaterTrackingStore.getState().actions.addReading({
+    meterId,
+    reading: 1306,
+    takenAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    source: 'homeowner',
+  });
+  renderForm(<ReadingFormDialog open onClose={() => {}} meterId={meterId} editingReading={null} />);
+
+  // Enter a value below the previous reading.
+  await fillDigits(user, '13050000');
+
+  const submit = screen.getByRole('button', { name: /add reading/i });
+  expect(submit).toBeDisabled();
+  expect(screen.getByText(/lower than the previous/i)).toBeInTheDocument();
+});
+
+test('"Add reading" becomes enabled when the value is at or above the previous reading', async () => {
+  const user = userEvent.setup();
+  const meterId = seedMeter();
+  useWaterTrackingStore.getState().actions.addReading({
+    meterId,
+    reading: 1306,
+    takenAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    source: 'homeowner',
+  });
+  renderForm(<ReadingFormDialog open onClose={() => {}} meterId={meterId} editingReading={null} />);
+
+  await fillDigits(user, '13060000');
+
+  const submit = screen.getByRole('button', { name: /add reading/i });
+  expect(submit).toBeEnabled();
+  expect(screen.queryByText(/lower than the previous/i)).not.toBeInTheDocument();
+});
+
+test('there is no "Save anyway" override when the value is below the previous reading', async () => {
+  const user = userEvent.setup();
+  const meterId = seedMeter();
+  useWaterTrackingStore.getState().actions.addReading({
+    meterId,
+    reading: 1306,
+    takenAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    source: 'homeowner',
+  });
+  renderForm(<ReadingFormDialog open onClose={() => {}} meterId={meterId} editingReading={null} />);
+
+  await fillDigits(user, '13050000');
+
+  expect(screen.queryByRole('button', { name: /save anyway/i })).not.toBeInTheDocument();
+});
+
 test('switching from Utility back to Homeowner clears the saved isEstimated flag', async () => {
   const user = userEvent.setup();
   const meterId = seedMeter();

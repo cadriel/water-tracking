@@ -86,9 +86,9 @@ export function RecentBars({ meterId }: RecentBarsProps) {
             ]}
             series={[
               {
-                data: intervals.map(i => i.consumption),
-                label: 'Consumption (m³)',
-                valueFormatter: value => (value === null ? '' : `${value.toFixed(4)} m³`),
+                data: intervals.map(i => i.consumption * 1000),
+                label: 'Consumption (L)',
+                valueFormatter: value => (value === null ? '' : `${value.toFixed(1)} L`),
               },
             ]}
             grid={{ horizontal: true }}
@@ -114,9 +114,7 @@ function createIntervalBar(intervals: BarInterval[], theme: Theme) {
   return function IntervalBar(props: BarProps) {
     const { dataIndex, x, y, width, height, style, onClick, className } = props;
     const interval = intervals[dataIndex];
-    const bothUtility =
-      interval?.start.source === 'utility' && interval?.end.source === 'utility';
-    const fill = bothUtility ? theme.palette.secondary.main : theme.palette.primary.main;
+    const fill = theme.palette.secondary.main;
     const isEstimated = interval?.isEstimated ?? false;
     return (
       <rect

@@ -47,7 +47,6 @@ export function ReadingFormDialog({
 
   const [digits, setDigits] = useState<DigitValue>({ white: '', red: '' });
   const [takenAt, setTakenAt] = useState<Date | null>(new Date());
-  const [acknowledgeDecrease, setAcknowledgeDecrease] = useState(false);
   const [source, setSource] = useState<ReadingSource>('homeowner');
   const [isEstimated, setIsEstimated] = useState(false);
 
@@ -65,7 +64,6 @@ export function ReadingFormDialog({
       setSource('homeowner');
       setIsEstimated(false);
     }
-    setAcknowledgeDecrease(false);
   }, [open, editingReading]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
@@ -84,8 +82,7 @@ export function ReadingFormDialog({
   const decreased =
     numericReading !== null && previousReading !== null && numericReading < previousReading.reading;
 
-  const canSubmit =
-    numericReading !== null && takenAt !== null && (!decreased || acknowledgeDecrease);
+  const canSubmit = numericReading !== null && takenAt !== null && !decreased;
 
   function handleSubmit() {
     if (!canSubmit || numericReading === null || !takenAt) return;
@@ -148,21 +145,9 @@ export function ReadingFormDialog({
             disableFuture
           />
           {decreased && (
-            <Alert
-              severity="warning"
-              action={
-                <Button
-                  color="inherit"
-                  size="small"
-                  onClick={() => setAcknowledgeDecrease(true)}
-                  disabled={acknowledgeDecrease}
-                >
-                  {acknowledgeDecrease ? 'Acknowledged' : 'Save anyway'}
-                </Button>
-              }
-            >
+            <Alert severity="error">
               This reading is lower than the previous one ({previousReading?.reading.toFixed(4)}{' '}
-              m³). Water meters usually only go up.
+              m³). Meter readings can&apos;t go down.
             </Alert>
           )}
         </Stack>

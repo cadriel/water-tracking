@@ -91,9 +91,9 @@ export function YearlyUtilityBars({ meterId }: YearlyUtilityBarsProps) {
             ]}
             series={[
               {
-                data: intervals.map(i => i.consumption),
-                label: 'Consumption (m³)',
-                valueFormatter: value => (value === null ? '' : `${value.toFixed(4)} m³`),
+                data: intervals.map(i => i.consumption * 1000),
+                label: 'Consumption (L)',
+                valueFormatter: value => (value === null ? '' : `${value.toFixed(1)} L`),
               },
             ]}
             grid={{ horizontal: true }}
