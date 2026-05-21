@@ -12,6 +12,7 @@ const plexSans = '"IBM Plex Sans", system-ui, -apple-system, sans-serif';
 const plexMono = '"IBM Plex Mono", ui-monospace, "Menlo", monospace';
 
 export const theme = extendTheme({
+  colorSchemeSelector: 'data',
   colorSchemes: {
     light: {
       palette: {

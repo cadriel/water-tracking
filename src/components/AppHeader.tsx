@@ -7,6 +7,12 @@ import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import Box from '@mui/material/Box';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
+import { useColorScheme } from '@mui/material/styles';
+import LightModeIcon from '@mui/icons-material/LightMode';
+import DarkModeIcon from '@mui/icons-material/DarkMode';
+import SettingsBrightnessIcon from '@mui/icons-material/SettingsBrightness';
 import {
   useWaterTrackingMeters,
   useWaterTrackingSelectedMeterId,
@@ -107,8 +113,42 @@ export function AppHeader({ onManageMeters }: AppHeaderProps) {
         >
           Meters
         </Button>
+        <ThemeToggle />
       </Toolbar>
     </AppBar>
+  );
+}
+
+function ThemeToggle() {
+  const { mode, setMode } = useColorScheme();
+  if (!mode) {
+    return (
+      <IconButton disabled aria-label="Theme toggle loading" sx={{ color: 'text.primary' }}>
+        <SettingsBrightnessIcon />
+      </IconButton>
+    );
+  }
+  const next = mode === 'system' ? 'light' : mode === 'light' ? 'dark' : 'system';
+  const label =
+    mode === 'system' ? 'Theme: System' : mode === 'light' ? 'Theme: Light' : 'Theme: Dark';
+  const Icon =
+    mode === 'system' ? SettingsBrightnessIcon : mode === 'light' ? LightModeIcon : DarkModeIcon;
+  return (
+    <Tooltip title={label}>
+      <IconButton
+        onClick={() => setMode(next)}
+        aria-label={`${label}. Click to switch to ${next}.`}
+        sx={{
+          color: 'text.primary',
+          border: '1px solid',
+          borderColor: 'divider',
+          borderRadius: 1,
+          '&:hover': { borderColor: 'primary.main', bgcolor: 'transparent' },
+        }}
+      >
+        <Icon fontSize="small" />
+      </IconButton>
+    </Tooltip>
   );
 }
 
