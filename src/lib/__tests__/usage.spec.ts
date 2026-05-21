@@ -2,8 +2,8 @@ import {
   averageDailyUsageLitres,
   averageDailyUsageLitresInLastNDays,
   averageBetweenLastUtilityReadings,
-} from './usage';
-import type { Reading } from '../types';
+} from '../usage';
+import type { Reading } from '../../types';
 
 function makeReading(
   takenAt: string,

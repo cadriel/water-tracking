@@ -3,8 +3,8 @@ import {
   useWaterTrackingStore,
   useWaterTrackingMeters,
   useWaterTrackingSelectedMeterId,
-} from './useWaterTrackingStore';
-import type { Reading } from '../types';
+} from '../useWaterTrackingStore';
+import type { Reading } from '../../types';
 import { renderHook, act } from '@testing-library/react';
 
 beforeEach(() => {

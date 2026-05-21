@@ -1,4 +1,4 @@
-import { splitDigits, formatReading, formatDelta } from './formatting';
+import { splitDigits, formatReading, formatDelta } from '../formatting';
 
 describe('splitDigits', () => {
   test('splits a whole-and-fraction reading into 4+4 digit strings', () => {
