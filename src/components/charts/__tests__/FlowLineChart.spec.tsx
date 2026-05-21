@@ -16,7 +16,7 @@ beforeEach(() => {
   useWaterTrackingStore.setState({ meters: [], readings: [], selectedMeterId: null });
 });
 
-test('shows the "Awaiting a second reading" placeholder when fewer than two readings fall in the last 30 days', () => {
+test('shows the "Awaiting a second reading" placeholder when fewer than two readings fall in the last 12 months', () => {
   const meterId = seedMeter();
   useWaterTrackingStore.getState().actions.addReading({
     meterId,
@@ -28,13 +28,13 @@ test('shows the "Awaiting a second reading" placeholder when fewer than two read
   expect(screen.getByText(/awaiting a second reading/i)).toBeInTheDocument();
 });
 
-test('readings older than 30 days are excluded from the chart window', () => {
+test('readings older than 12 months are excluded from the chart window', () => {
   const meterId = seedMeter();
   const { addReading } = useWaterTrackingStore.getState().actions;
   addReading({
     meterId,
     reading: 1290,
-    takenAt: isoDaysAgo(60),
+    takenAt: isoDaysAgo(400),
     source: 'homeowner',
   });
   addReading({

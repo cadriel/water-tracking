@@ -98,7 +98,10 @@ function AxisTooltipContent({ readings }: AxisTooltipContentProps) {
             fontVariantNumeric: 'tabular-nums',
           }}
         >
-          {reading.reading.toFixed(4)}
+          {(reading.reading * 1000).toLocaleString('en-US', {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1,
+          })}
         </Typography>
         <Typography
           sx={{
@@ -108,7 +111,7 @@ function AxisTooltipContent({ readings }: AxisTooltipContentProps) {
             letterSpacing: '0.08em',
           }}
         >
-          m³
+          L
         </Typography>
       </Stack>
     </Paper>
@@ -132,23 +135,23 @@ interface FlowLineChartProps {
 }
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
-const THIRTY_DAYS_AGO = Date.now() - 30 * MS_PER_DAY;
+const ONE_YEAR_AGO = Date.now() - 365 * MS_PER_DAY;
 
 export function FlowLineChart({ meterId }: FlowLineChartProps) {
   const readings = useWaterTrackingReadings();
   const theme = useTheme();
 
-  const last30Days = useMemo(() => {
+  const last12Months = useMemo(() => {
     return readings
       .filter(r => r.meterId === meterId)
-      .filter(r => new Date(r.takenAt).getTime() >= THIRTY_DAYS_AGO)
+      .filter(r => new Date(r.takenAt).getTime() >= ONE_YEAR_AGO)
       .slice()
       .sort((a, b) => (a.takenAt < b.takenAt ? -1 : 1));
   }, [readings, meterId]);
 
-  const AxisTooltip = useMemo(() => makeAxisTooltip(last30Days), [last30Days]);
+  const AxisTooltip = useMemo(() => makeAxisTooltip(last12Months), [last12Months]);
 
-  if (last30Days.length < 2) {
+  if (last12Months.length < 2) {
     return (
       <BlueprintFrame tag="HYD/03" subTag="VOID">
         <Box sx={{ py: 4, textAlign: 'center' }}>
@@ -169,14 +172,14 @@ export function FlowLineChart({ meterId }: FlowLineChartProps) {
   }
 
   return (
-    <BlueprintFrame tag="HYD/03" subTag={`N=${last30Days.length}`} padding={1.5}>
+    <BlueprintFrame tag="HYD/03" subTag={`N=${last12Months.length}`} padding={1.5}>
       <LineChart
         height={300}
         hideLegend
         margin={{ top: 16, right: 24, bottom: 32, left: 56 }}
         xAxis={[
           {
-            data: last30Days.map(r => new Date(r.takenAt)),
+            data: last12Months.map(r => new Date(r.takenAt)),
             scaleType: 'time',
             valueFormatter: (value: Date) => value.toLocaleDateString(),
             tickLabelStyle: {
@@ -199,7 +202,7 @@ export function FlowLineChart({ meterId }: FlowLineChartProps) {
         ]}
         series={[
           {
-            data: last30Days.map(r => r.reading),
+            data: last12Months.map(r => r.reading),
             label: 'Reading (m³)',
             color: theme.palette.text.secondary,
             showMark: true,
@@ -221,7 +224,7 @@ export function FlowLineChart({ meterId }: FlowLineChartProps) {
           },
         }}
         slots={{
-          mark: createColorCodedMark(last30Days, theme),
+          mark: createColorCodedMark(last12Months, theme),
           tooltip: AxisTooltip,
         }}
       />
