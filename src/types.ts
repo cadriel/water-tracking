@@ -13,6 +13,9 @@ export interface Reading {
   takenAt: string; // ISO 8601
   createdAt: string; // ISO 8601
   source: ReadingSource;
+  // Only meaningful when source === 'utility'. Utilities sometimes estimate
+  // readings instead of physically reading the meter; tag those as estimated.
+  isEstimated?: boolean;
 }
 
 export interface NewReadingInput {
@@ -20,4 +23,5 @@ export interface NewReadingInput {
   reading: number;
   takenAt: string;
   source: ReadingSource;
+  isEstimated?: boolean;
 }

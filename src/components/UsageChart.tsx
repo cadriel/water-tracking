@@ -12,7 +12,7 @@ import { BlueprintFrame } from './BlueprintFrame';
 import { useWaterTrackingReadings } from '../store/useWaterTrackingStore';
 
 interface AxisTooltipContentProps {
-  readings: { takenAt: string; reading: number; source: string }[];
+  readings: { takenAt: string; reading: number; source: string; isEstimated?: boolean }[];
 }
 
 function AxisTooltipContent({ readings }: AxisTooltipContentProps) {
@@ -26,8 +26,9 @@ function AxisTooltipContent({ readings }: AxisTooltipContentProps) {
 
   const date = axisValue instanceof Date ? axisValue : new Date(reading.takenAt);
   const isUtility = reading.source === 'utility';
+  const isEstimated = isUtility && reading.isEstimated === true;
   const dotColor = isUtility ? theme.palette.secondary.main : theme.palette.primary.main;
-  const sourceLabel = isUtility ? 'Utility' : 'Homeowner';
+  const sourceLabel = isUtility ? (isEstimated ? 'Utility · Est.' : 'Utility') : 'Homeowner';
 
   return (
     <Paper
@@ -114,7 +115,9 @@ function AxisTooltipContent({ readings }: AxisTooltipContentProps) {
   );
 }
 
-function makeAxisTooltip(readings: { takenAt: string; reading: number; source: string }[]) {
+function makeAxisTooltip(
+  readings: { takenAt: string; reading: number; source: string; isEstimated?: boolean }[],
+) {
   return function AxisTooltip() {
     return (
       <ChartsTooltipContainer trigger="axis">
@@ -269,13 +272,14 @@ export function UsageChart({ meterId }: UsageChartProps) {
   );
 }
 
-type ChartReading = { source: string };
+type ChartReading = { source: string; isEstimated?: boolean };
 
 function createColorCodedMark(readings: ChartReading[], theme: Theme) {
   return function ColorCodedMark({ dataIndex, ...rest }: MarkElementProps) {
     const reading = readings[dataIndex];
     const isUtility = reading?.source === 'utility';
-    const fill = isUtility ? theme.palette.secondary.main : theme.palette.primary.main;
+    const isEstimated = isUtility && reading?.isEstimated === true;
+    const color = isUtility ? theme.palette.secondary.main : theme.palette.primary.main;
     return (
       <>
         {/* outer halo — gives a watery refraction feel */}
@@ -283,17 +287,17 @@ function createColorCodedMark(readings: ChartReading[], theme: Theme) {
           cx={rest.x}
           cy={rest.y}
           r={9}
-          fill={fill}
+          fill={color}
           opacity={0.16}
           style={{ pointerEvents: 'none' }}
         />
-        {/* the mark itself */}
+        {/* the mark itself — hollow ring for estimated utility reads */}
         <circle
           cx={rest.x}
           cy={rest.y}
           r={4.5}
-          fill={fill}
-          stroke={theme.palette.background.paper}
+          fill={isEstimated ? theme.palette.background.paper : color}
+          stroke={isEstimated ? color : theme.palette.background.paper}
           strokeWidth={1.5}
         />
       </>

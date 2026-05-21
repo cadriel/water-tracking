@@ -99,7 +99,7 @@ export const useWaterTrackingStore = create<WaterTrackingState & WaterTrackingAc
       })),
       {
         name,
-        version: 1,
+        version: 2,
         migrate: (persistedState, fromVersion) => {
           const state = persistedState as Partial<WaterTrackingState>;
           if (fromVersion < 1 && state.readings) {
@@ -107,6 +107,11 @@ export const useWaterTrackingStore = create<WaterTrackingState & WaterTrackingAc
               ...r,
               source: (r as Reading).source ?? 'homeowner',
             }));
+          }
+          if (fromVersion < 2 && state.readings) {
+            state.readings = state.readings.map(r =>
+              r.source === 'utility' ? { ...r, isEstimated: r.isEstimated ?? false } : r,
+            );
           }
           return state as WaterTrackingState;
         },

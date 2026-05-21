@@ -142,6 +142,7 @@ export function ReadingList({ meterId }: ReadingListProps) {
               <TableBody>
                 {rows.map(({ reading, delta, ordinal }) => {
                   const isUtility = reading.source === 'utility';
+                  const isEstimated = isUtility && reading.isEstimated === true;
                   const deltaPositive = delta !== null && delta >= 0;
                   return (
                     <TableRow
@@ -241,6 +242,26 @@ export function ReadingList({ meterId }: ReadingListProps) {
                               }}
                             >
                               Utility
+                            </Box>
+                          )}
+                          {isEstimated && (
+                            <Box
+                              component="span"
+                              sx={{
+                                px: 0.75,
+                                py: 0.25,
+                                fontFamily: 'var(--app-mono)',
+                                fontSize: '0.6rem',
+                                letterSpacing: '0.18em',
+                                textTransform: 'uppercase',
+                                color: 'secondary.main',
+                                border: '1px dashed',
+                                borderColor: 'secondary.main',
+                                borderRadius: 0.5,
+                                opacity: 0.8,
+                              }}
+                            >
+                              Estimated
                             </Box>
                           )}
                         </Stack>

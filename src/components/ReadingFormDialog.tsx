@@ -11,7 +11,7 @@ import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { MeterDigitInput, type DigitValue } from './MeterDigitInput';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
-import type { Reading, ReadingSource } from '../types';
+import type { NewReadingInput, Reading, ReadingSource } from '../types';
 import { useWaterTrackingActions, useWaterTrackingReadings } from '../store/useWaterTrackingStore';
 
 interface ReadingFormDialogProps {
@@ -49,6 +49,7 @@ export function ReadingFormDialog({
   const [takenAt, setTakenAt] = useState<Date | null>(new Date());
   const [acknowledgeDecrease, setAcknowledgeDecrease] = useState(false);
   const [source, setSource] = useState<ReadingSource>('homeowner');
+  const [isEstimated, setIsEstimated] = useState(false);
 
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
@@ -57,10 +58,12 @@ export function ReadingFormDialog({
       setDigits(readingToDigits(editingReading.reading));
       setTakenAt(new Date(editingReading.takenAt));
       setSource(editingReading.source);
+      setIsEstimated(editingReading.isEstimated ?? false);
     } else {
       setDigits({ white: '', red: '' });
       setTakenAt(new Date());
       setSource('homeowner');
+      setIsEstimated(false);
     }
     setAcknowledgeDecrease(false);
   }, [open, editingReading]);
@@ -86,11 +89,14 @@ export function ReadingFormDialog({
 
   function handleSubmit() {
     if (!canSubmit || numericReading === null || !takenAt) return;
-    const payload = {
+    const payload: NewReadingInput = {
       meterId,
       reading: numericReading,
       takenAt: takenAt.toISOString(),
       source,
+      // Explicit `undefined` (not omitted) so editing utility → homeowner
+      // clears the stored flag via Object.assign in updateReading.
+      isEstimated: source === 'utility' ? isEstimated : undefined,
     };
     if (editingReading) {
       updateReading(editingReading.id, payload);
@@ -117,6 +123,20 @@ export function ReadingFormDialog({
             <ToggleButton value="homeowner">Homeowner</ToggleButton>
             <ToggleButton value="utility">Utility</ToggleButton>
           </ToggleButtonGroup>
+          {source === 'utility' && (
+            <ToggleButtonGroup
+              value={isEstimated}
+              exclusive
+              onChange={(_event, next) => {
+                if (next !== null) setIsEstimated(next as boolean);
+              }}
+              size="small"
+              aria-label="Utility reading type"
+            >
+              <ToggleButton value={false}>Actual</ToggleButton>
+              <ToggleButton value={true}>Estimated</ToggleButton>
+            </ToggleButtonGroup>
+          )}
           <div>
             <MeterDigitInput value={digits} onChange={setDigits} />
             <FormHelperText>4 white digits (m³), then 4 red digits (decimal)</FormHelperText>

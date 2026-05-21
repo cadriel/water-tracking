@@ -181,6 +181,37 @@ describe('reading actions', () => {
     });
     expect(useWaterTrackingStore.getState().readings[0].source).toBe('utility');
   });
+
+  test('addReading round-trips isEstimated for a utility read', () => {
+    const meterId = seedMeter();
+    useWaterTrackingStore.getState().actions.addReading({
+      meterId,
+      reading: 1.0,
+      takenAt: '2026-05-20T08:00:00.000Z',
+      source: 'utility',
+      isEstimated: true,
+    });
+    expect(useWaterTrackingStore.getState().readings[0].isEstimated).toBe(true);
+  });
+
+  test('updateReading clears isEstimated when source switches to homeowner', () => {
+    const meterId = seedMeter();
+    useWaterTrackingStore.getState().actions.addReading({
+      meterId,
+      reading: 1.0,
+      takenAt: '2026-05-20T08:00:00.000Z',
+      source: 'utility',
+      isEstimated: true,
+    });
+    const readingId = useWaterTrackingStore.getState().readings[0].id;
+    useWaterTrackingStore.getState().actions.updateReading(readingId, {
+      source: 'homeowner',
+      isEstimated: undefined,
+    });
+    const updated = useWaterTrackingStore.getState().readings[0];
+    expect(updated.source).toBe('homeowner');
+    expect(updated.isEstimated).toBeUndefined();
+  });
 });
 
 describe('migration v0 → v1', () => {
@@ -204,5 +235,35 @@ describe('migration v0 → v1', () => {
     const migrated = readings.map(r => ({ ...r, source: r.source ?? 'homeowner' }));
 
     expect(migrated[0].source).toBe('homeowner');
+  });
+});
+
+describe('migration v1 → v2', () => {
+  test('utility readings without isEstimated get backfilled as actual; homeowner reads untouched', () => {
+    const v1Readings: Reading[] = [
+      {
+        id: 'r-util',
+        meterId: 'm1',
+        reading: 1.0,
+        takenAt: '2026-05-01T08:00:00.000Z',
+        createdAt: '2026-05-01T08:00:00.000Z',
+        source: 'utility',
+      },
+      {
+        id: 'r-home',
+        meterId: 'm1',
+        reading: 2.0,
+        takenAt: '2026-05-02T08:00:00.000Z',
+        createdAt: '2026-05-02T08:00:00.000Z',
+        source: 'homeowner',
+      },
+    ];
+
+    const migrated = v1Readings.map(r =>
+      r.source === 'utility' ? { ...r, isEstimated: r.isEstimated ?? false } : r,
+    );
+
+    expect(migrated[0].isEstimated).toBe(false);
+    expect('isEstimated' in migrated[1]).toBe(false);
   });
 });
