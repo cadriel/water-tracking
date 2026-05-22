@@ -189,7 +189,7 @@ export function ReadingList({ meterId }: ReadingListProps) {
                               letterSpacing: '0.06em',
                             }}
                           >
-                            {format(new Date(reading.takenAt), 'HH:mm')}
+                            {format(new Date(reading.takenAt), 'h:mm a')}
                           </Typography>
                         </Stack>
                       </TableCell>
