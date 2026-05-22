@@ -8,7 +8,9 @@ import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
+import TableSortLabel from '@mui/material/TableSortLabel';
 import IconButton from '@mui/material/IconButton';
+import Pagination from '@mui/material/Pagination';
 import Typography from '@mui/material/Typography';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
@@ -17,6 +19,7 @@ import { format } from 'date-fns';
 import { ReadingFormDialog } from './ReadingFormDialog';
 import { BlueprintFrame } from './BlueprintFrame';
 import { formatDelta, formatReading } from '../lib/formatting';
+import { READINGS_PAGE_SIZE } from '../constants';
 import type { Reading } from '../types';
 import { useWaterTrackingActions, useWaterTrackingReadings } from '../store/useWaterTrackingStore';
 
@@ -35,8 +38,10 @@ export function ReadingList({ meterId }: ReadingListProps) {
   const { deleteReading } = useWaterTrackingActions();
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Reading | null>(null);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [page, setPage] = useState(1);
 
-  const rows = useMemo<DisplayRow[]>(() => {
+  const sortedRows = useMemo<DisplayRow[]>(() => {
     const sortedAsc = readings
       .filter(r => r.meterId === meterId)
       .slice()
@@ -48,8 +53,21 @@ export function ReadingList({ meterId }: ReadingListProps) {
       ordinal: index,
     }));
 
-    return withDeltas.reverse(); // newest first
-  }, [readings, meterId]);
+    return sortDir === 'desc' ? withDeltas.reverse() : withDeltas;
+  }, [readings, meterId, sortDir]);
+
+  const totalPages = Math.max(1, Math.ceil(sortedRows.length / READINGS_PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const pageStart = (safePage - 1) * READINGS_PAGE_SIZE;
+  const visibleRows = sortedRows.slice(pageStart, pageStart + READINGS_PAGE_SIZE);
+  const showingFrom = sortedRows.length === 0 ? 0 : pageStart + 1;
+  const showingTo = pageStart + visibleRows.length;
+  const paginationDisabled = sortedRows.length <= READINGS_PAGE_SIZE;
+
+  function toggleSort() {
+    setSortDir(prev => (prev === 'desc' ? 'asc' : 'desc'));
+    setPage(1);
+  }
 
   function openNew() {
     setEditing(null);
@@ -108,7 +126,7 @@ export function ReadingList({ meterId }: ReadingListProps) {
         </Button>
       </Stack>
 
-      {rows.length === 0 ? (
+      {sortedRows.length === 0 ? (
         <BlueprintFrame tag="LOG/01" subTag="VOID">
           <Box sx={{ py: 3, textAlign: 'center' }}>
             <Typography
@@ -125,13 +143,22 @@ export function ReadingList({ meterId }: ReadingListProps) {
           </Box>
         </BlueprintFrame>
       ) : (
-        <BlueprintFrame tag="LOG/01" subTag={`N=${rows.length}`} padding={0}>
+        <BlueprintFrame tag="LOG/01" subTag={`N=${sortedRows.length}`} padding={0}>
           <TableContainer>
             <Table size="small" sx={{ '& .MuiTableCell-root': { borderBottomStyle: 'dashed' } }}>
               <TableHead>
                 <TableRow>
                   <TableCell sx={{ width: 56, pl: 3 }}>No.</TableCell>
-                  <TableCell>When</TableCell>
+                  <TableCell sortDirection={sortDir}>
+                    <TableSortLabel
+                      active
+                      direction={sortDir}
+                      onClick={toggleSort}
+                      aria-label="Toggle sort by date"
+                    >
+                      When
+                    </TableSortLabel>
+                  </TableCell>
                   <TableCell>Reading</TableCell>
                   <TableCell>Δ since previous</TableCell>
                   <TableCell align="right" sx={{ pr: 3 }}>
@@ -140,7 +167,7 @@ export function ReadingList({ meterId }: ReadingListProps) {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {rows.map(({ reading, delta, ordinal }) => {
+                {visibleRows.map(({ reading, delta, ordinal }) => {
                   const isUtility = reading.source === 'utility';
                   const isEstimated = isUtility && reading.isEstimated === true;
                   const deltaPositive = delta !== null && delta >= 0;
@@ -315,6 +342,40 @@ export function ReadingList({ meterId }: ReadingListProps) {
               </TableBody>
             </Table>
           </TableContainer>
+          <Stack
+            direction="row"
+            sx={{
+              px: 3,
+              py: 1.5,
+              borderTop: '1px dashed',
+              borderColor: 'divider',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: 2,
+              flexWrap: 'wrap',
+            }}
+          >
+            <Typography
+              sx={{
+                fontFamily: 'var(--app-mono)',
+                fontSize: '0.7rem',
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
+                color: 'text.secondary',
+              }}
+            >
+              Showing {showingFrom}–{showingTo} of {sortedRows.length}
+            </Typography>
+            <Pagination
+              count={totalPages}
+              page={safePage}
+              onChange={(_, value) => setPage(value)}
+              disabled={paginationDisabled}
+              size="small"
+              shape="rounded"
+              siblingCount={1}
+            />
+          </Stack>
         </BlueprintFrame>
       )}
 
