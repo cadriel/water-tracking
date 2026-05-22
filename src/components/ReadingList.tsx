@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
@@ -11,17 +11,34 @@ import TableRow from '@mui/material/TableRow';
 import TableSortLabel from '@mui/material/TableSortLabel';
 import IconButton from '@mui/material/IconButton';
 import Pagination from '@mui/material/Pagination';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
 import Typography from '@mui/material/Typography';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import FileUploadIcon from '@mui/icons-material/FileUpload';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import { format } from 'date-fns';
 import { ReadingFormDialog } from './ReadingFormDialog';
 import { BlueprintFrame } from './BlueprintFrame';
+import { ImportReadingsDialog, type ImportMode } from './ImportReadingsDialog';
 import { formatDelta, formatReading } from '../lib/formatting';
+import {
+  ImportError,
+  buildExport,
+  dedupeAgainst,
+  exportFileName,
+  parseImport,
+  type ParsedImport,
+} from '../lib/readingsImportExport';
 import { READINGS_PAGE_SIZE } from '../constants';
 import type { Reading } from '../types';
-import { useWaterTrackingActions, useWaterTrackingReadings } from '../store/useWaterTrackingStore';
+import {
+  useWaterTrackingActions,
+  useWaterTrackingMeters,
+  useWaterTrackingReadings,
+} from '../store/useWaterTrackingStore';
 
 interface ReadingListProps {
   meterId: string;
@@ -32,13 +49,32 @@ interface DisplayRow {
   delta: number | null;
 }
 
+interface SnackbarState {
+  open: boolean;
+  severity: 'success' | 'error';
+  message: string;
+}
+
 export function ReadingList({ meterId }: ReadingListProps) {
   const readings = useWaterTrackingReadings();
-  const { deleteReading } = useWaterTrackingActions();
+  const meters = useWaterTrackingMeters();
+  const { addReading, deleteReading } = useWaterTrackingActions();
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Reading | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [page, setPage] = useState(1);
+  const [pendingImport, setPendingImport] = useState<ParsedImport | null>(null);
+  const [snackbar, setSnackbar] = useState<SnackbarState>({
+    open: false,
+    severity: 'success',
+    message: '',
+  });
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const meter = meters.find(m => m.id === meterId) ?? null;
+  const meterReadings = useMemo(
+    () => readings.filter(r => r.meterId === meterId),
+    [readings, meterId],
+  );
 
   const sortedRows = useMemo<DisplayRow[]>(() => {
     const sortedAsc = readings
@@ -83,6 +119,86 @@ export function ReadingList({ meterId }: ReadingListProps) {
     }
   }
 
+  function showSnackbar(severity: 'success' | 'error', message: string) {
+    setSnackbar({ open: true, severity, message });
+  }
+
+  function handleExport() {
+    if (!meter || meterReadings.length === 0) return;
+    const json = buildExport(meter, meterReadings);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = exportFileName(meter.name);
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+    showSnackbar('success', `Exported ${meterReadings.length} readings.`);
+  }
+
+  function handleImportClick() {
+    fileInputRef.current?.click();
+  }
+
+  async function handleFileChosen(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = ''; // allow re-picking the same file later
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const parsed = parseImport(text);
+      setPendingImport(parsed);
+    } catch (err) {
+      const message = err instanceof ImportError ? err.message : 'Failed to read the file.';
+      showSnackbar('error', message);
+    }
+  }
+
+  function handleImportConfirm(mode: ImportMode) {
+    if (!pendingImport || !meter) {
+      setPendingImport(null);
+      return;
+    }
+
+    if (mode === 'replace') {
+      for (const existing of meterReadings) {
+        deleteReading(existing.id);
+      }
+      for (const r of pendingImport.readings) {
+        addReading({
+          meterId: meter.id,
+          reading: r.reading,
+          takenAt: r.takenAt,
+          source: r.source,
+          ...(r.isEstimated !== undefined ? { isEstimated: r.isEstimated } : {}),
+        });
+      }
+      showSnackbar(
+        'success',
+        `Replaced with ${pendingImport.readings.length} reading${pendingImport.readings.length === 1 ? '' : 's'}.`,
+      );
+    } else {
+      const { toAdd, skipped } = dedupeAgainst(meterReadings, pendingImport.readings);
+      for (const r of toAdd) {
+        addReading({
+          meterId: meter.id,
+          reading: r.reading,
+          takenAt: r.takenAt,
+          source: r.source,
+          ...(r.isEstimated !== undefined ? { isEstimated: r.isEstimated } : {}),
+        });
+      }
+      showSnackbar(
+        'success',
+        `Imported ${toAdd.length} reading${toAdd.length === 1 ? '' : 's'} (skipped ${skipped.length} duplicate${skipped.length === 1 ? '' : 's'}).`,
+      );
+    }
+
+    setPendingImport(null);
+  }
+
   return (
     <Box>
       <Stack
@@ -113,16 +229,44 @@ export function ReadingList({ meterId }: ReadingListProps) {
             Readings
           </Typography>
         </Stack>
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<AddIcon />}
-          onClick={openNew}
-          sx={{ flexShrink: 0 }}
-        >
-          Add reading
-        </Button>
+        <Stack direction="row" spacing={1} sx={{ flexShrink: 0, flexWrap: 'wrap' }}>
+          <Button
+            variant="outlined"
+            color="primary"
+            startIcon={<FileUploadIcon />}
+            onClick={handleImportClick}
+            disabled={!meter}
+          >
+            Import
+          </Button>
+          <Button
+            variant="outlined"
+            color="primary"
+            startIcon={<FileDownloadIcon />}
+            onClick={handleExport}
+            disabled={!meter || meterReadings.length === 0}
+          >
+            Export
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={openNew}
+          >
+            Add reading
+          </Button>
+        </Stack>
       </Stack>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="application/json,.json"
+        onChange={handleFileChosen}
+        hidden
+        data-testid="readings-import-input"
+      />
 
       {sortedRows.length === 0 ? (
         <BlueprintFrame tag="LOG/01" subTag="VOID">
@@ -369,6 +513,31 @@ export function ReadingList({ meterId }: ReadingListProps) {
         meterId={meterId}
         editingReading={editing}
       />
+
+      <ImportReadingsDialog
+        open={pendingImport !== null}
+        count={pendingImport?.readings.length ?? 0}
+        sourceMeterName={pendingImport?.meter.name ?? ''}
+        exportedAt={pendingImport?.exportedAt ?? ''}
+        onCancel={() => setPendingImport(null)}
+        onConfirm={handleImportConfirm}
+      />
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={5000}
+        onClose={() => setSnackbar(s => ({ ...s, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setSnackbar(s => ({ ...s, open: false }))}
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

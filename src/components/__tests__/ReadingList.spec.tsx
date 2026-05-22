@@ -224,3 +224,174 @@ test('deleting the only reading on the last page clamps back to the new last pag
   expect(dataRows()).toHaveLength(READINGS_PAGE_SIZE);
   expect(screen.getByText(/Showing 1–5 of 5/)).toBeInTheDocument();
 });
+
+// ---- Import / Export ---------------------------------------------------
+
+interface ExportCapture {
+  blobs: Blob[];
+  lastAnchor: HTMLAnchorElement | null;
+}
+
+function captureExportBlob(): ExportCapture {
+  const capture: ExportCapture = { blobs: [], lastAnchor: null };
+  // jsdom doesn't define URL.createObjectURL / revokeObjectURL — assign directly.
+  // beforeEach calls vi.restoreAllMocks() which doesn't remove these, but the
+  // next test seeds again or doesn't use them; tests are independent.
+  (URL as unknown as { createObjectURL: (b: Blob) => string }).createObjectURL = (blob: Blob) => {
+    capture.blobs.push(blob);
+    return 'blob:test-url';
+  };
+  (URL as unknown as { revokeObjectURL: (s: string) => void }).revokeObjectURL = () => {};
+  vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+    this: HTMLAnchorElement,
+  ) {
+    capture.lastAnchor = this;
+  });
+  return capture;
+}
+
+function makeExportFile(meterName: string, readings: { takenAt: string; reading: number }[]) {
+  const payload = {
+    schemaVersion: 2,
+    exportedAt: '2026-05-20T00:00:00.000Z',
+    meter: { id: 'src-meter', name: meterName, createdAt: '2026-01-01T00:00:00.000Z' },
+    readings: readings.map(r => ({
+      id: 'ignored',
+      meterId: 'src-meter',
+      reading: r.reading,
+      takenAt: r.takenAt,
+      createdAt: r.takenAt,
+      source: 'homeowner',
+    })),
+  };
+  return new File([JSON.stringify(payload)], 'export.json', { type: 'application/json' });
+}
+
+test('Export is disabled when the meter has no readings', () => {
+  const meterId = seedMeter();
+  renderList(meterId);
+  expect(screen.getByRole('button', { name: /^Export$/ })).toBeDisabled();
+});
+
+test('Export downloads a JSON file with the current meter readings', async () => {
+  const user = userEvent.setup();
+  const meterId = seedMeter();
+  seedReadings(meterId, 3);
+  const capture = captureExportBlob();
+
+  renderList(meterId);
+  await user.click(screen.getByRole('button', { name: /^Export$/ }));
+
+  expect(capture.blobs).toHaveLength(1);
+  const text = await capture.blobs[0].text();
+  const parsed = JSON.parse(text);
+  expect(parsed.schemaVersion).toBe(2);
+  expect(parsed.meter.name).toBe('Main');
+  expect(parsed.readings).toHaveLength(3);
+  expect(capture.lastAnchor?.download).toMatch(/^water-readings-main-\d{4}-\d{2}-\d{2}\.json$/);
+});
+
+test('Importing a file shows the confirm dialog with the reading count and source meter', async () => {
+  const user = userEvent.setup();
+  const meterId = seedMeter();
+  renderList(meterId);
+
+  const file = makeExportFile('Backup', [
+    { takenAt: '2026-04-01T08:00:00.000Z', reading: 1200 },
+    { takenAt: '2026-04-02T08:00:00.000Z', reading: 1201 },
+  ]);
+
+  await user.upload(screen.getByTestId('readings-import-input'), file);
+
+  expect(await screen.findByRole('dialog')).toBeInTheDocument();
+  expect(screen.getByText(/Import 2 readings/i)).toBeInTheDocument();
+  expect(screen.getByText(/From meter .Backup./)).toBeInTheDocument();
+});
+
+test('Merge import skips duplicates by takenAt', async () => {
+  const user = userEvent.setup();
+  const meterId = seedMeter();
+  // Existing reading at this exact takenAt — the imported one with the same
+  // takenAt should be skipped.
+  useWaterTrackingStore.getState().actions.addReading({
+    meterId,
+    reading: 999,
+    takenAt: '2026-04-01T08:00:00.000Z',
+    source: 'homeowner',
+  });
+
+  renderList(meterId);
+  const file = makeExportFile('Backup', [
+    { takenAt: '2026-04-01T08:00:00.000Z', reading: 1200 }, // duplicate
+    { takenAt: '2026-04-02T08:00:00.000Z', reading: 1201 }, // new
+  ]);
+
+  await user.upload(screen.getByTestId('readings-import-input'), file);
+  await user.click(screen.getByRole('button', { name: /^Import$/ }));
+
+  const stored = useWaterTrackingStore.getState().readings;
+  expect(stored).toHaveLength(2); // one original + one new (duplicate skipped)
+  expect(stored.find(r => r.takenAt === '2026-04-01T08:00:00.000Z')?.reading).toBe(999);
+  expect(stored.find(r => r.takenAt === '2026-04-02T08:00:00.000Z')?.reading).toBe(1201);
+  expect(screen.getByText(/Imported 1 reading \(skipped 1 duplicate\)/)).toBeInTheDocument();
+});
+
+test('Replace import wipes only the target meter and inserts the imported readings', async () => {
+  const user = userEvent.setup();
+  const meterId = seedMeter();
+  const { addMeter, addReading } = useWaterTrackingStore.getState().actions;
+  const otherMeterId = addMeter('Garage');
+  addReading({ meterId, reading: 100, takenAt: '2026-03-01T08:00:00.000Z', source: 'homeowner' });
+  addReading({ meterId, reading: 110, takenAt: '2026-03-02T08:00:00.000Z', source: 'homeowner' });
+  addReading({
+    meterId: otherMeterId,
+    reading: 555,
+    takenAt: '2026-03-15T08:00:00.000Z',
+    source: 'homeowner',
+  });
+
+  renderList(meterId);
+  const file = makeExportFile('Backup', [{ takenAt: '2026-04-01T08:00:00.000Z', reading: 1300 }]);
+
+  await user.upload(screen.getByTestId('readings-import-input'), file);
+  await user.click(screen.getByLabelText(/Replace all readings on this meter/));
+  await user.click(screen.getByRole('button', { name: /^Import$/ }));
+
+  const stored = useWaterTrackingStore.getState().readings;
+  const onTarget = stored.filter(r => r.meterId === meterId);
+  const onOther = stored.filter(r => r.meterId === otherMeterId);
+  expect(onTarget).toHaveLength(1);
+  expect(onTarget[0].reading).toBe(1300);
+  expect(onOther).toHaveLength(1);
+  expect(onOther[0].reading).toBe(555);
+});
+
+test('Cancelling the import dialog leaves the store untouched', async () => {
+  const user = userEvent.setup();
+  const meterId = seedMeter();
+  seedReadings(meterId, 2);
+  const before = useWaterTrackingStore.getState().readings;
+
+  renderList(meterId);
+  const file = makeExportFile('Backup', [{ takenAt: '2026-04-01T08:00:00.000Z', reading: 1300 }]);
+
+  await user.upload(screen.getByTestId('readings-import-input'), file);
+  await user.click(screen.getByRole('button', { name: /^Cancel$/ }));
+
+  expect(useWaterTrackingStore.getState().readings).toEqual(before);
+});
+
+test('An invalid file surfaces an error and leaves the store untouched', async () => {
+  const user = userEvent.setup();
+  const meterId = seedMeter();
+  seedReadings(meterId, 1);
+  const before = useWaterTrackingStore.getState().readings;
+
+  renderList(meterId);
+  const badFile = new File(['not json'], 'broken.json', { type: 'application/json' });
+
+  await user.upload(screen.getByTestId('readings-import-input'), badFile);
+
+  expect(await screen.findByText(/not valid JSON/i)).toBeInTheDocument();
+  expect(useWaterTrackingStore.getState().readings).toEqual(before);
+});

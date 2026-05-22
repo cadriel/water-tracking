@@ -24,6 +24,30 @@ interface WaterTrackingActions {
 
 const name = 'water-tracking-store';
 
+export const STORE_SCHEMA_VERSION = 2;
+
+// Migrates a (possibly partial) persisted state forward to STORE_SCHEMA_VERSION.
+// Used by zustand persist AND by readings import (older exports get upgraded on
+// the way in) — keep both call sites in mind when bumping the version.
+export function migrateState(
+  persistedState: Partial<WaterTrackingState>,
+  fromVersion: number,
+): Partial<WaterTrackingState> {
+  const state = persistedState;
+  if (fromVersion < 1 && state.readings) {
+    state.readings = state.readings.map(r => ({
+      ...r,
+      source: (r as Reading).source ?? 'homeowner',
+    }));
+  }
+  if (fromVersion < 2 && state.readings) {
+    state.readings = state.readings.map(r =>
+      r.source === 'utility' ? { ...r, isEstimated: r.isEstimated ?? false } : r,
+    );
+  }
+  return state;
+}
+
 const initialState: WaterTrackingState = {
   meters: [],
   readings: [],
@@ -99,22 +123,9 @@ export const useWaterTrackingStore = create<WaterTrackingState & WaterTrackingAc
       })),
       {
         name,
-        version: 2,
-        migrate: (persistedState, fromVersion) => {
-          const state = persistedState as Partial<WaterTrackingState>;
-          if (fromVersion < 1 && state.readings) {
-            state.readings = state.readings.map(r => ({
-              ...r,
-              source: (r as Reading).source ?? 'homeowner',
-            }));
-          }
-          if (fromVersion < 2 && state.readings) {
-            state.readings = state.readings.map(r =>
-              r.source === 'utility' ? { ...r, isEstimated: r.isEstimated ?? false } : r,
-            );
-          }
-          return state as WaterTrackingState;
-        },
+        version: STORE_SCHEMA_VERSION,
+        migrate: (persistedState, fromVersion) =>
+          migrateState(persistedState as Partial<WaterTrackingState>, fromVersion) as WaterTrackingState,
         partialize: state => ({
           meters: state.meters,
           readings: state.readings,
