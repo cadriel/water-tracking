@@ -30,7 +30,6 @@ interface ReadingListProps {
 interface DisplayRow {
   reading: Reading;
   delta: number | null;
-  ordinal: number; // 0-based, 0 is oldest
 }
 
 export function ReadingList({ meterId }: ReadingListProps) {
@@ -50,7 +49,6 @@ export function ReadingList({ meterId }: ReadingListProps) {
     const withDeltas: DisplayRow[] = sortedAsc.map((reading, index) => ({
       reading,
       delta: index === 0 ? null : reading.reading - sortedAsc[index - 1].reading,
-      ordinal: index,
     }));
 
     return sortDir === 'desc' ? withDeltas.reverse() : withDeltas;
@@ -148,8 +146,7 @@ export function ReadingList({ meterId }: ReadingListProps) {
             <Table size="small" sx={{ '& .MuiTableCell-root': { borderBottomStyle: 'dashed' } }}>
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ width: 56, pl: 3 }}>No.</TableCell>
-                  <TableCell sortDirection={sortDir}>
+                  <TableCell sortDirection={sortDir} sx={{ pl: 3 }}>
                     <TableSortLabel
                       active
                       direction={sortDir}
@@ -167,7 +164,7 @@ export function ReadingList({ meterId }: ReadingListProps) {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {visibleRows.map(({ reading, delta, ordinal }) => {
+                {visibleRows.map(({ reading, delta }) => {
                   const isUtility = reading.source === 'utility';
                   const isEstimated = isUtility && reading.isEstimated === true;
                   const deltaPositive = delta !== null && delta >= 0;
@@ -183,19 +180,6 @@ export function ReadingList({ meterId }: ReadingListProps) {
                       }}
                     >
                       <TableCell sx={{ pl: 3 }}>
-                        <Typography
-                          component="span"
-                          sx={{
-                            fontFamily: 'var(--app-mono)',
-                            fontSize: '0.72rem',
-                            letterSpacing: '0.1em',
-                            color: 'text.secondary',
-                          }}
-                        >
-                          {String(ordinal + 1).padStart(3, '0')}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
                         <Stack spacing={0.25}>
                           <Typography
                             sx={{
