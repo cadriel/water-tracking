@@ -43,6 +43,32 @@ describe('computeIntervals', () => {
     expect(result[0].isEstimated).toBe(false);
   });
 
+  test('computes averagePerDay as L/day across a multi-day interval', () => {
+    const result = computeIntervals([
+      makeReading('2026-05-01T08:00:00.000Z', 100),
+      makeReading('2026-05-08T08:00:00.000Z', 100.5),
+    ]);
+    // 500 L over 7 days → ~71.43 L/day.
+    expect(result[0].averagePerDay).toBeCloseTo(500 / 7, 6);
+  });
+
+  test('extrapolates averagePerDay for sub-day intervals (does not return null)', () => {
+    const result = computeIntervals([
+      makeReading('2026-05-01T08:00:00.000Z', 100),
+      makeReading('2026-05-01T14:00:00.000Z', 100.1),
+    ]);
+    // 100 L over 6h → 400 L/day.
+    expect(result[0].averagePerDay).toBeCloseTo(400, 6);
+  });
+
+  test('returns null averagePerDay when two readings share the same takenAt', () => {
+    const result = computeIntervals([
+      makeReading('2026-05-01T08:00:00.000Z', 100),
+      makeReading('2026-05-01T08:00:00.000Z', 100.05),
+    ]);
+    expect(result[0].averagePerDay).toBeNull();
+  });
+
   test('sorts ascending before pairing (unsorted input)', () => {
     const result = computeIntervals([
       makeReading('2026-05-08T08:00:00.000Z', 100.5),

@@ -88,7 +88,12 @@ export function RecentBars({ meterId }: RecentBarsProps) {
               {
                 data: intervals.map(i => i.consumption * 1000),
                 label: 'Consumption (L)',
-                valueFormatter: value => (value === null ? '' : `${value.toFixed(1)} L`),
+                valueFormatter: (value, context) => {
+                  if (value === null) return '';
+                  const avg = intervals[context.dataIndex]?.averagePerDay;
+                  const total = `${value.toFixed(1)} L`;
+                  return avg == null ? total : `${total} · ${avg.toFixed(1)} L/day`;
+                },
               },
             ]}
             grid={{ horizontal: true }}

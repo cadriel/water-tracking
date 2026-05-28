@@ -9,6 +9,7 @@ export interface BarInterval {
   start: Reading;
   end: Reading;
   consumption: number;
+  averagePerDay: number | null;
   isEstimated: boolean;
 }
 
@@ -32,10 +33,15 @@ function pairIntoIntervals(sortedReadings: Reading[]): BarInterval[] {
   for (let i = 1; i < sortedReadings.length; i++) {
     const start = sortedReadings[i - 1];
     const end = sortedReadings[i];
+    const consumption = end.reading - start.reading;
+    const daysBetween =
+      (new Date(end.takenAt).getTime() - new Date(start.takenAt).getTime()) / MS_PER_DAY;
+    const averagePerDay = daysBetween > 0 ? (consumption * 1000) / daysBetween : null;
     intervals.push({
       start,
       end,
-      consumption: end.reading - start.reading,
+      consumption,
+      averagePerDay,
       isEstimated: isEstimatedRead(start) || isEstimatedRead(end),
     });
   }
